@@ -1,0 +1,6 @@
+{
+  "name": "SWIM TIME TRACKER",
+  "description": "Aplikasi pencatat waktu latihan dan lomba renang, Personal Best (PB), dan rekomendasi program latihan otomatis berbasis Google Spreadsheet.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
