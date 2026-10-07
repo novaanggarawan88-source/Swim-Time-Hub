@@ -12,6 +12,7 @@ import {
   X
 } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
+import { SyncStatus } from '../services/dataService';
 
 interface NavbarProps {
   currentTab: string;
@@ -19,6 +20,7 @@ interface NavbarProps {
   openStopwatchModal: () => void;
   openSheetsModal: () => void;
   hasSheetsUrl: boolean;
+  syncStatus?: SyncStatus;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -26,7 +28,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSelectTab,
   openStopwatchModal,
   openSheetsModal,
-  hasSheetsUrl
+  hasSheetsUrl,
+  syncStatus = 'idle'
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
@@ -106,19 +109,39 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="hidden sm:inline">Stopwatch</span>
             </button>
 
-            {/* Google Sheets Status / Manager */}
+            {/* Google Sheets Real-Time Status / Manager */}
             <button
               onClick={openSheetsModal}
-              title="Pengaturan Google Spreadsheet & Apps Script"
+              title="Status Sinkronisasi Real-Time Google Spreadsheet"
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold border transition-all ${
-                hasSheetsUrl
+                syncStatus === 'saving'
+                  ? 'bg-amber-500/20 border-amber-500/40 text-amber-300 animate-pulse'
+                  : syncStatus === 'saved'
+                  ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+                  : hasSheetsUrl
                   ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/20'
                   : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white'
               }`}
             >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
-              <span className="hidden md:inline">Google Sheets</span>
-              <span className={`w-2 h-2 rounded-full ${hasSheetsUrl ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'}`} />
+              <FileSpreadsheet className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span className="hidden md:inline font-bold">
+                {syncStatus === 'saving' ? (
+                  <span className="text-amber-300">Menyimpan Otomatis...</span>
+                ) : syncStatus === 'saved' ? (
+                  <span className="text-emerald-300">Tersimpan ke Sheets</span>
+                ) : hasSheetsUrl ? (
+                  <span>Otomatis ke Sheets</span>
+                ) : (
+                  <span>Google Sheets</span>
+                )}
+              </span>
+              <span className={`w-2 h-2 rounded-full shrink-0 ${
+                syncStatus === 'saving'
+                  ? 'bg-amber-400 animate-spin'
+                  : hasSheetsUrl
+                  ? 'bg-emerald-400 animate-pulse'
+                  : 'bg-amber-400'
+              }`} />
             </button>
 
             {/* Mobile Hamburger Button */}

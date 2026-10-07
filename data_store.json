@@ -1,21 +1,21 @@
 {
-  "lastUpdated": "2026-10-07T23:02:04.193Z",
+  "lastUpdated": "2026-10-07T23:34:28.759Z",
   "config": {
     "webAppUrl": "https://script.google.com/macros/s/AKfycbysRKWrUAYAzjnj3kc7OXHdfVaHioXO1G_aZ8Aan-mVuduGo_S4hiNDG0hFT_hVhZTSAg/exec",
     "spreadsheetId": "1LzIYYbpT5wEuCwW1nmaC1ZZyuPeQBjUowEorTS6W0jc",
     "autoSync": true,
-    "lastSync": ""
+    "lastSync": "2026-10-07T23:34:24.611Z"
   },
   "atlet": [
     {
-      "id": "ATL-001",
-      "nama": "I Putu Arya Satria",
+      "id": "ATL-003",
+      "nama": "Andi Pratama",
       "jenisKelamin": "Laki-laki",
-      "tanggalLahir": "2010-04-15",
-      "kelompokUmur": "KU II (13-14 th)",
+      "tanggalLahir": "2008-11-03",
+      "kelompokUmur": "KU I (15-17 th)",
       "klub": "Garuda SC Buleleng",
-      "pelatih": "Coach Wayan Sudira",
-      "status": "Aktif"
+      "pelatih": "Coach Made Arimbawa",
+      "status": "Nonaktif"
     },
     {
       "id": "ATL-002",
@@ -25,27 +25,7 @@
       "kelompokUmur": "KU III (11-12 th)",
       "klub": "Garuda SC Buleleng",
       "pelatih": "Coach Wayan Sudira",
-      "status": "Aktif"
-    },
-    {
-      "id": "ATL-003",
-      "nama": "Andi Pratama",
-      "jenisKelamin": "Laki-laki",
-      "tanggalLahir": "2008-11-03",
-      "kelompokUmur": "KU I (15-17 th)",
-      "klub": "Garuda SC Buleleng",
-      "pelatih": "Coach Made Arimbawa",
-      "status": "Aktif"
-    },
-    {
-      "id": "ATL-004",
-      "nama": "Siti Rahmawati",
-      "jenisKelamin": "Perempuan",
-      "tanggalLahir": "2011-02-19",
-      "kelompokUmur": "KU III (11-12 th)",
-      "klub": "Garuda SC Buleleng",
-      "pelatih": "Coach Made Arimbawa",
-      "status": "Aktif"
+      "status": "Nonaktif"
     },
     {
       "id": "ATL-005",
@@ -55,6 +35,26 @@
       "kelompokUmur": "KU IV (≤10 th)",
       "klub": "Garuda SC Buleleng",
       "pelatih": "Coach Wayan Sudira",
+      "status": "Nonaktif"
+    },
+    {
+      "id": "ATL-004",
+      "nama": "Siti Rahmawati",
+      "jenisKelamin": "Perempuan",
+      "tanggalLahir": "2011-02-19",
+      "kelompokUmur": "KU III (11-12 th)",
+      "klub": "Garuda SC Buleleng",
+      "pelatih": "Coach Made Arimbawa",
+      "status": "Nonaktif"
+    },
+    {
+      "id": "ATL-001",
+      "nama": "I Putu Arya Diva Erlanga",
+      "jenisKelamin": "Laki-laki",
+      "tanggalLahir": "2015-12-30",
+      "kelompokUmur": "KU IV (≤10 th - 10 th)",
+      "klub": "Garuda SC Buleleng",
+      "pelatih": "Coach Rahmat Jumali",
       "status": "Aktif"
     }
   ],
@@ -65,148 +65,173 @@
       "penyelenggara": "Pengkab Akuatik Buleleng & Bali Swimming",
       "lokasi": "Kolam Renang Nirmala Asri Buleleng",
       "tanggal": "2026-03-14",
-      "keterangan": "Kejuaraan Renang Antar Perkumpulan se-Bali & Nasional"
+      "keterangan": "Kejuaraan Renang Antar Perkumpulan se-Bali"
     },
     {
       "id": "LMB-002",
-      "namaLomba": "KEJURDA RENANG BALI 2026",
+      "namaLomba": "AMREG REGIS TAHUNAN KE-4 2026",
       "penyelenggara": "Akuatik Indonesia Pengprov Bali",
-      "lokasi": "Kolam Renang Tirta Arum Blahkiuh",
-      "tanggal": "2026-06-20",
-      "keterangan": "Seleksi Atlet Porprov & Kejurnas"
+      "lokasi": "Kolam Renang Amarta Regis Denpasar",
+      "tanggal": "2026-10-02",
+      "keterangan": "Open Kompetisi"
+    },
+    {
+      "id": "LMB-732215",
+      "namaLomba": "FESTIVAL RENANG MAHAJAYA",
+      "penyelenggara": "MAHAJAYA",
+      "lokasi": "Kolam Renang Mahajaya, Ubung, Denpasan Utara",
+      "tanggal": "2026-05-09",
+      "keterangan": "Open Kompetisi"
+    },
+    {
+      "id": "LMB-833275",
+      "namaLomba": "AMREG HOLIDAY FUN & SWIMMING COMPETITION #3",
+      "penyelenggara": "Amarta Regis",
+      "lokasi": "Kolam Amarta Regis Denpasar",
+      "tanggal": "2026-07-04",
+      "keterangan": ""
     },
     {
       "id": "LMB-003",
       "namaLomba": "PIALA BUPATI BULELENG OPEN",
       "penyelenggara": "KONI Buleleng",
-      "lokasi": "Kolam Renang Kolam Kolam Seririt",
-      "tanggal": "2026-01-25",
+      "lokasi": "Kolam Renang Nirmala Asri Buleleng",
+      "tanggal": "2026-12-18",
       "keterangan": "Kejuaraan terbuka kategori kelompok umur"
     }
   ],
   "catatanWaktu": [
     {
-      "id": "WKT-101",
-      "tanggal": "2026-01-10",
-      "atlet": "Andi Pratama",
-      "jenis": "Latihan",
-      "namaLomba": "",
-      "gaya": "Bebas",
-      "jarak": "50 m",
-      "waktu": "00:35.20",
-      "waktuDetik": 35.2,
-      "catatan": "Latihan sprint awal tahun"
-    },
-    {
-      "id": "WKT-102",
-      "tanggal": "2026-01-18",
-      "atlet": "Andi Pratama",
-      "jenis": "Latihan",
-      "namaLomba": "",
-      "gaya": "Bebas",
-      "jarak": "50 m",
-      "waktu": "00:34.80",
-      "waktuDetik": 34.8,
-      "catatan": "Fokus tolakan balok start"
-    },
-    {
-      "id": "WKT-103",
-      "tanggal": "2026-01-25",
-      "atlet": "Andi Pratama",
+      "id": "WKT-441076",
+      "tanggal": "2026-10-07",
+      "atlet": "I Putu Arya Diva Erlanga",
       "jenis": "Lomba",
-      "namaLomba": "PIALA BUPATI BULELENG OPEN",
+      "namaLomba": "AMREG REGIS TAHUNAN KE-4 2026",
       "gaya": "Bebas",
       "jarak": "50 m",
-      "waktu": "00:34.25",
-      "waktuDetik": 34.25,
-      "catatan": "Babak penyisihan"
+      "waktu": "00:37.39",
+      "waktuDetik": 37.39,
+      "catatan": ""
     },
     {
-      "id": "WKT-104",
-      "tanggal": "2026-02-10",
-      "atlet": "Andi Pratama",
-      "jenis": "Latihan",
-      "namaLomba": "",
+      "id": "WKT-419252",
+      "tanggal": "2026-10-07",
+      "atlet": "I Putu Arya Diva Erlanga",
+      "jenis": "Lomba",
+      "namaLomba": "AMREG REGIS TAHUNAN KE-4 2026",
       "gaya": "Bebas",
-      "jarak": "50 m",
-      "waktu": "00:34.60",
-      "waktuDetik": 34.6,
-      "catatan": "Interval 6x50m"
+      "jarak": "200 m",
+      "waktu": "03:01.99",
+      "waktuDetik": 181.99,
+      "catatan": ""
     },
     {
-      "id": "WKT-105",
-      "tanggal": "2026-03-14",
-      "atlet": "Andi Pratama",
+      "id": "WKT-394515",
+      "tanggal": "2026-10-07",
+      "atlet": "I Putu Arya Diva Erlanga",
+      "jenis": "Lomba",
+      "namaLomba": "AMREG REGIS TAHUNAN KE-4 2026",
+      "gaya": "Dada",
+      "jarak": "100 m",
+      "waktu": "01:36.90",
+      "waktuDetik": 96.9,
+      "catatan": ""
+    },
+    {
+      "id": "WKT-361443",
+      "tanggal": "2026-10-07",
+      "atlet": "I Putu Arya Diva Erlanga",
+      "jenis": "Lomba",
+      "namaLomba": "AMREG REGIS TAHUNAN KE-4 2026",
+      "gaya": "Bebas",
+      "jarak": "100 m",
+      "waktu": "01:23.29",
+      "waktuDetik": 62.29,
+      "catatan": ""
+    },
+    {
+      "id": "WKT-330420",
+      "tanggal": "2026-10-07",
+      "atlet": "I Putu Arya Diva Erlanga",
+      "jenis": "Lomba",
+      "namaLomba": "AMREG REGIS TAHUNAN KE-4 2026",
+      "gaya": "Dada",
+      "jarak": "50 m",
+      "waktu": "00:43.33",
+      "waktuDetik": 43.33,
+      "catatan": ""
+    },
+    {
+      "id": "WKT-300022",
+      "tanggal": "2026-10-07",
+      "atlet": "I Putu Arya Diva Erlanga",
+      "jenis": "Lomba",
+      "namaLomba": "AMREG REGIS TAHUNAN KE-4 2026",
+      "gaya": "Dada",
+      "jarak": "200 m",
+      "waktu": "03:27.73",
+      "waktuDetik": 207.73,
+      "catatan": ""
+    },
+    {
+      "id": "WKT-008888",
+      "tanggal": "2026-09-20",
+      "atlet": "I Putu Arya Diva Erlanga",
+      "jenis": "Lomba",
+      "namaLomba": "MOLA MOLA CUP II 2026",
+      "gaya": "Bebas",
+      "jarak": "100 m",
+      "waktu": "01:25.83",
+      "waktuDetik": 85.83,
+      "catatan": ""
+    },
+    {
+      "id": "WKT-989035",
+      "tanggal": "2026-09-20",
+      "atlet": "I Putu Arya Diva Erlanga",
       "jenis": "Lomba",
       "namaLomba": "MOLA MOLA CUP II 2026",
       "gaya": "Bebas",
       "jarak": "50 m",
-      "waktu": "00:33.95",
-      "waktuDetik": 33.95,
-      "catatan": "Final - Tembus Personal Best!",
-      "isPb": true
+      "waktu": "00:38.01",
+      "waktuDetik": 38.01,
+      "catatan": ""
     },
     {
-      "id": "WKT-106",
-      "tanggal": "2026-03-14",
-      "atlet": "Andi Pratama",
-      "jenis": "Lomba",
-      "namaLomba": "MOLA MOLA CUP II 2026",
-      "gaya": "Kupu-kupu",
-      "jarak": "50 m",
-      "waktu": "00:36.10",
-      "waktuDetik": 36.1,
-      "catatan": "Penyisihan 50m butterfly"
-    },
-    {
-      "id": "WKT-107",
-      "tanggal": "2026-03-14",
-      "atlet": "I Putu Arya Satria",
+      "id": "WKT-968588",
+      "tanggal": "2026-09-20",
+      "atlet": "I Putu Arya Diva Erlanga",
       "jenis": "Lomba",
       "namaLomba": "MOLA MOLA CUP II 2026",
       "gaya": "Dada",
       "jarak": "50 m",
-      "waktu": "00:38.45",
-      "waktuDetik": 38.45,
-      "catatan": "Medali Perak KU II",
-      "isPb": true
+      "waktu": "00:44.77",
+      "waktuDetik": 44.77,
+      "catatan": ""
     },
     {
-      "id": "WKT-108",
-      "tanggal": "2026-02-28",
-      "atlet": "I Putu Arya Satria",
-      "jenis": "Latihan",
-      "namaLomba": "",
+      "id": "WKT-953500",
+      "tanggal": "2026-09-20",
+      "atlet": "I Putu Arya Diva Erlanga",
+      "jenis": "Lomba",
+      "namaLomba": "MOLA MOLA CUP II 2026",
       "gaya": "Dada",
-      "jarak": "50 m",
-      "waktu": "00:39.80",
-      "waktuDetik": 39.8,
-      "catatan": "Simulasi race pace"
+      "jarak": "100 m",
+      "waktu": "01:39.92",
+      "waktuDetik": 99.92,
+      "catatan": ""
     },
     {
-      "id": "WKT-109",
-      "tanggal": "2026-03-14",
-      "atlet": "Ni Kadek Ayu Lestari",
+      "id": "WKT-927478",
+      "tanggal": "2026-09-20",
+      "atlet": "I Putu Arya Diva Erlanga",
       "jenis": "Lomba",
       "namaLomba": "MOLA MOLA CUP II 2026",
-      "gaya": "Bebas",
-      "jarak": "50 m",
-      "waktu": "00:36.20",
-      "waktuDetik": 36.2,
-      "catatan": "Personal best 50m gaya bebas putri",
-      "isPb": true
-    },
-    {
-      "id": "WKT-110",
-      "tanggal": "2026-03-14",
-      "atlet": "Ni Kadek Ayu Lestari",
-      "jenis": "Lomba",
-      "namaLomba": "MOLA MOLA CUP II 2026",
-      "gaya": "Punggung",
-      "jarak": "50 m",
-      "waktu": "00:41.50",
-      "waktuDetik": 41.5,
-      "catatan": "Penyisihan 50m punggung"
+      "gaya": "Dada",
+      "jarak": "200 m",
+      "waktu": "03:31.35",
+      "waktuDetik": 211.35,
+      "catatan": ""
     }
   ],
   "programLatihan": []

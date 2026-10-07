@@ -220,8 +220,12 @@ const SEED_CATATAN: CatatanWaktu[] = [
   }
 ];
 
+export type SyncStatus = 'idle' | 'saving' | 'saved' | 'error';
+
 export class SwimDataService {
   private static subscribers: Array<() => void> = [];
+  private static statusSubscribers: Array<(status: SyncStatus) => void> = [];
+  private static currentSyncStatus: SyncStatus = 'idle';
 
   // Register state change listener for cross-tab or server-sync updates
   static subscribe(callback: () => void) {
@@ -229,6 +233,30 @@ export class SwimDataService {
     return () => {
       this.subscribers = this.subscribers.filter(cb => cb !== callback);
     };
+  }
+
+  // Register real-time sync status listener (saving/saved/idle)
+  static subscribeSyncStatus(callback: (status: SyncStatus) => void) {
+    this.statusSubscribers.push(callback);
+    callback(this.currentSyncStatus);
+    return () => {
+      this.statusSubscribers = this.statusSubscribers.filter(cb => cb !== callback);
+    };
+  }
+
+  static getSyncStatus(): SyncStatus {
+    return this.currentSyncStatus;
+  }
+
+  private static setSyncStatus(status: SyncStatus) {
+    this.currentSyncStatus = status;
+    this.statusSubscribers.forEach(cb => {
+      try {
+        cb(status);
+      } catch (e) {
+        console.error('Status subscriber error:', e);
+      }
+    });
   }
 
   private static notifySubscribers() {
@@ -277,8 +305,8 @@ export class SwimDataService {
     }
 
     localStorage.setItem(STORAGE_KEYS.ATLET, JSON.stringify(list));
+    this.syncWithServer({ action: 'saveAtlet', item: nowItem });
     this.syncBackground('saveAtlet', nowItem);
-    this.syncWithServer();
     this.notifySubscribers();
     return { status: 'success', id, item: nowItem };
   }
@@ -289,12 +317,24 @@ export class SwimDataService {
     if (item) {
       item.status = item.status === 'Aktif' ? 'Nonaktif' : 'Aktif';
       localStorage.setItem(STORAGE_KEYS.ATLET, JSON.stringify(list));
+      this.syncWithServer({ action: 'saveAtlet', item });
       this.syncBackground('saveAtlet', item);
-      this.syncWithServer();
       this.notifySubscribers();
       return item;
     }
     return null;
+  }
+
+  static deleteAtlet(id: string): boolean {
+    const list = this.getAtlet();
+    const filtered = list.filter(a => a.id !== id);
+    if (filtered.length !== list.length) {
+      localStorage.setItem(STORAGE_KEYS.ATLET, JSON.stringify(filtered));
+      this.syncWithServer({ deleteType: 'atlet', deleteId: id });
+      this.notifySubscribers();
+      return true;
+    }
+    return false;
   }
 
   // LOMBA
@@ -331,10 +371,22 @@ export class SwimDataService {
     }
 
     localStorage.setItem(STORAGE_KEYS.LOMBA, JSON.stringify(list));
+    this.syncWithServer({ action: 'saveLomba', item: nowItem });
     this.syncBackground('saveLomba', nowItem);
-    this.syncWithServer();
     this.notifySubscribers();
     return { status: 'success', id, item: nowItem };
+  }
+
+  static deleteLomba(id: string): boolean {
+    const list = this.getLomba();
+    const filtered = list.filter(l => l.id !== id);
+    if (filtered.length !== list.length) {
+      localStorage.setItem(STORAGE_KEYS.LOMBA, JSON.stringify(filtered));
+      this.syncWithServer({ deleteType: 'lomba', deleteId: id });
+      this.notifySubscribers();
+      return true;
+    }
+    return false;
   }
 
   // CATATAN WAKTU
@@ -385,8 +437,9 @@ export class SwimDataService {
 
     list.unshift(nowItem);
     localStorage.setItem(STORAGE_KEYS.CATATAN_WAKTU, JSON.stringify(list));
+    // Real-time auto-sync to server and Google Spreadsheet
+    this.syncWithServer({ action: 'saveCatatanWaktu', item: nowItem });
     this.syncBackground('saveCatatanWaktu', nowItem);
-    this.syncWithServer();
     this.notifySubscribers();
 
     return { status: 'success', id, item: nowItem, isNewPb };
@@ -397,7 +450,7 @@ export class SwimDataService {
     const filtered = list.filter(r => r.id !== id);
     if (filtered.length !== list.length) {
       localStorage.setItem(STORAGE_KEYS.CATATAN_WAKTU, JSON.stringify(filtered));
-      this.syncWithServer();
+      this.syncWithServer({ deleteType: 'catatanWaktu', deleteId: id });
       this.notifySubscribers();
       return true;
     }
@@ -419,8 +472,8 @@ export class SwimDataService {
     const list = this.getProgramLatihan();
     const updated = [...items, ...list];
     localStorage.setItem(STORAGE_KEYS.PROGRAM_LATIHAN, JSON.stringify(updated));
+    this.syncWithServer({ action: 'saveProgramLatihan', item: items });
     this.syncBackground('saveProgramLatihan', items);
-    this.syncWithServer();
     this.notifySubscribers();
     return { status: 'success', count: items.length };
   }
@@ -485,7 +538,7 @@ export class SwimDataService {
       });
       const mergedAtlets = Array.from(mergedAtletsMap.values());
       const hasNewLocalAtlet = localAtlets.some(la => !serverAtlets.some((sa: any) => sa.id === la.id));
-      if (mergedAtlets.length > 0) {
+      if (mergedAtlets.length > 0 && JSON.stringify(mergedAtlets) !== JSON.stringify(localAtlets)) {
         localStorage.setItem(STORAGE_KEYS.ATLET, JSON.stringify(mergedAtlets));
         hasChanges = true;
       }
@@ -503,7 +556,7 @@ export class SwimDataService {
       });
       const mergedLomba = Array.from(mergedLombaMap.values());
       const hasNewLocalLomba = localLomba.some(ll => !serverLomba.some((sl: any) => sl.id === ll.id));
-      if (mergedLomba.length > 0) {
+      if (mergedLomba.length > 0 && JSON.stringify(mergedLomba) !== JSON.stringify(localLomba)) {
         localStorage.setItem(STORAGE_KEYS.LOMBA, JSON.stringify(mergedLomba));
         hasChanges = true;
       }
@@ -521,7 +574,7 @@ export class SwimDataService {
       });
       const mergedRecords = Array.from(mergedRecordsMap.values());
       const hasNewLocalRecord = localRecords.some(lr => !serverRecords.some((sr: any) => sr.id === lr.id));
-      if (mergedRecords.length > 0) {
+      if (mergedRecords.length > 0 && JSON.stringify(mergedRecords) !== JSON.stringify(localRecords)) {
         localStorage.setItem(STORAGE_KEYS.CATATAN_WAKTU, JSON.stringify(mergedRecords));
         hasChanges = true;
       }
@@ -539,7 +592,7 @@ export class SwimDataService {
       });
       const mergedPrograms = Array.from(mergedProgramsMap.values());
       const hasNewLocalProgram = localPrograms.some(lp => !serverPrograms.some((sp: any) => sp.id === lp.id));
-      if (mergedPrograms.length > 0) {
+      if (mergedPrograms.length > 0 && JSON.stringify(mergedPrograms) !== JSON.stringify(localPrograms)) {
         localStorage.setItem(STORAGE_KEYS.PROGRAM_LATIHAN, JSON.stringify(mergedPrograms));
         hasChanges = true;
       }
@@ -581,23 +634,39 @@ export class SwimDataService {
   }
 
   // Background Push to Server (so all other devices get it immediately)
-  private static async syncWithServer() {
+  static async syncWithServer(extraPayload: any = {}): Promise<boolean> {
     try {
+      this.setSyncStatus('saving');
       const payload = {
         atlet: this.getAtlet(),
         lomba: this.getLomba(),
         catatanWaktu: this.getCatatanWaktu(),
         programLatihan: this.getProgramLatihan(),
-        config: this.getConfig()
+        config: this.getConfig(),
+        ...extraPayload
       };
 
-      await fetch('/api/data/sync', {
+      const res = await fetch('/api/data/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+      const json = await res.json().catch(() => ({}));
+      if (json && json.success) {
+        this.setSyncStatus('saved');
+        setTimeout(() => {
+          if (this.currentSyncStatus === 'saved') {
+            this.setSyncStatus('idle');
+          }
+        }, 2500);
+        return true;
+      }
+      this.setSyncStatus('idle');
+      return false;
     } catch (err) {
       console.warn('Sync to server failed:', err);
+      this.setSyncStatus('idle');
+      return false;
     }
   }
 

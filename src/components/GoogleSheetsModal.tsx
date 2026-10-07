@@ -320,9 +320,14 @@ export const GoogleSheetsModal: React.FC<GoogleSheetsModalProps> = ({
                   </small>
                 </div>
 
-                <div className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl text-[11px] text-slate-300 flex items-center gap-2">
-                  <span className="text-emerald-400 font-bold">☁️ Sinkronisasi Multi-Device:</span>
-                  <span>Cukup disimpan sekali di sini (baik dari HP maupun Laptop), maka kedua perangkat akan otomatis tersinkron.</span>
+                <div className="p-3.5 bg-emerald-950/40 border border-emerald-500/40 rounded-xl text-xs text-slate-200 space-y-1">
+                  <div className="flex items-center gap-2 text-emerald-400 font-extrabold text-xs">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>SINKRONISASI REAL-TIME OTOMATIS SUDAH AKTIF</span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 leading-relaxed">
+                    Anda <b>tidak perlu lagi menekan tombol Tarik atau Kirim secara manual</b>! Setiap kali mencatat waktu latihan, menambah atlet, atau menyimpan data lomba dari HP maupun Laptop, data <b>langsung tersimpan otomatis detik itu juga ke Google Spreadsheet</b> dan otomatis tampil sama di semua perangkat Anda secara realtime.
+                  </p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 pt-2">
@@ -330,7 +335,7 @@ export const GoogleSheetsModal: React.FC<GoogleSheetsModalProps> = ({
                     onClick={handleSaveConfig}
                     className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg flex items-center gap-1.5 transition-all"
                   >
-                    <span>Simpan & Sinkronkan (HP & Laptop)</span>
+                    <span>Simpan Pengaturan</span>
                   </button>
 
                   <button
@@ -344,19 +349,21 @@ export const GoogleSheetsModal: React.FC<GoogleSheetsModalProps> = ({
                   <button
                     onClick={handlePushAll}
                     disabled={isSyncing}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cyan-700 hover:bg-cyan-600 text-white font-bold text-xs"
+                    title="Kirim semua data sebagai cadangan manual"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs border border-slate-700"
                   >
-                    <UploadCloud className="w-3.5 h-3.5" />
-                    <span>Kirim Semua Data ke Spreadsheet</span>
+                    <UploadCloud className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Kirim Manual (Cadangan)</span>
                   </button>
 
                   <button
                     onClick={handlePullAll}
                     disabled={isSyncing}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs border border-slate-700"
+                    title="Tarik ulang jika mengedit langsung di dokumen Google Sheets"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs border border-slate-700"
                   >
-                    <DownloadCloud className="w-3.5 h-3.5" />
-                    <span>Tarik Data Terbaru</span>
+                    <DownloadCloud className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Tarik Manual</span>
                   </button>
                 </div>
               </div>
@@ -365,10 +372,10 @@ export const GoogleSheetsModal: React.FC<GoogleSheetsModalProps> = ({
               <div className="p-4 bg-slate-900/60 rounded-xl border border-slate-800 text-xs text-slate-300 space-y-2">
                 <span className="font-bold text-emerald-400 flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-400" />
-                  Status Sinkronisasi Multi-Device & Cloud:
+                  Sistem Real-Time Multi-Device Aktif:
                 </span>
                 <p>
-                  Aplikasi ini kini dilengkapi <b>Penyimpanan Server Pusat</b> dan <b>Sinkronisasi Google Spreadsheet</b>. Ketika Anda mencatat waktu atau menambah atlet dari HP, datanya otomatis tersimpan ke server dan spreadsheet sehingga saat Anda membuka aplikasi di laptop, komputer, atau HP lain, seluruh rekapan datanya tetap ada dan selalu sama.
+                  Aplikasi kini bekerja dengan <b>Penyimpanan Server Pusat</b> dan <b>Google Spreadsheet Terhubung</b>. Saat Anda berada di tepi kolam mencatat waktu renang dari HP Android atau iPhone, datanya otomatis langsung masuk ke Google Spreadsheet dan laptop pelatih langsung terbarui secara otomatis dalam hitungan detik.
                 </p>
               </div>
             </div>

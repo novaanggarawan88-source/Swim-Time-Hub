@@ -259,8 +259,85 @@ function writeDataStore(data: any) {
   }
 }
 
-// Ensure store exists on startup
-readDataStore();
+// Helper function to push individual updates directly to Google Apps Script in real-time
+async function pushItemToGoogleSheets(webAppUrl: string, action: string, item: any) {
+  try {
+    if (!webAppUrl || !item) return;
+    const res = await fetch(webAppUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action, data: item })
+    });
+    const text = await res.text();
+    console.log(`[Google Sheets Real-Time Auto-Save] Action ${action} completed:`, text.slice(0, 120));
+  } catch (err) {
+    console.warn(`[Google Sheets Real-Time Auto-Save] Error forwarding ${action} to Google Sheets:`, err);
+  }
+}
+
+// Helper to silently pull latest updates from Google Spreadsheet into central store
+async function pullFromGoogleSheetsSilent() {
+  try {
+    const store = readDataStore();
+    const webAppUrl = store.config?.webAppUrl;
+    if (!webAppUrl) return;
+
+    const [resA, resL, resW] = await Promise.allSettled([
+      fetch(`${webAppUrl}?action=getAtlet`).then(r => r.json()),
+      fetch(`${webAppUrl}?action=getLomba`).then(r => r.json()),
+      fetch(`${webAppUrl}?action=getCatatanWaktu`).then(r => r.json())
+    ]);
+
+    let updated = false;
+
+    if (resA.status === 'fulfilled' && Array.isArray(resA.value) && resA.value.length > 0) {
+      const existingMap = new Map<string, any>(store.atlet.map((a: any) => [a.id, a]));
+      for (const item of resA.value) {
+        if (item && item.id) {
+          const prev = existingMap.get(item.id) || {};
+          existingMap.set(item.id, Object.assign({}, prev, item));
+        }
+      }
+      store.atlet = Array.from(existingMap.values());
+      updated = true;
+    }
+
+    if (resL.status === 'fulfilled' && Array.isArray(resL.value) && resL.value.length > 0) {
+      const existingMap = new Map<string, any>(store.lomba.map((l: any) => [l.id, l]));
+      for (const item of resL.value) {
+        if (item && item.id) {
+          const prev = existingMap.get(item.id) || {};
+          existingMap.set(item.id, Object.assign({}, prev, item));
+        }
+      }
+      store.lomba = Array.from(existingMap.values());
+      updated = true;
+    }
+
+    if (resW.status === 'fulfilled' && Array.isArray(resW.value) && resW.value.length > 0) {
+      const existingMap = new Map<string, any>(store.catatanWaktu.map((c: any) => [c.id, c]));
+      for (const item of resW.value) {
+        if (item && item.id) {
+          const prev = existingMap.get(item.id) || {};
+          existingMap.set(item.id, Object.assign({}, prev, item));
+        }
+      }
+      store.catatanWaktu = Array.from(existingMap.values());
+      updated = true;
+    }
+
+    if (updated) {
+      store.config.lastSync = new Date().toISOString();
+      writeDataStore(store);
+    }
+  } catch (err) {
+    // Silent background pull catch
+  }
+}
+
+// Initial background sync from Google Sheets on server boot & periodic interval
+pullFromGoogleSheetsSilent();
+setInterval(pullFromGoogleSheetsSilent, 20000);
 
 // API Route: Get Central Data (Multi-Device Shared State)
 app.get('/api/data', (_req, res) => {
@@ -273,6 +350,17 @@ app.post('/api/data/sync', (req, res) => {
   try {
     const incoming = req.body || {};
     const store = readDataStore();
+
+    // Handle Deletions
+    if (incoming.deleteType && incoming.deleteId) {
+      if (incoming.deleteType === 'catatanWaktu') {
+        store.catatanWaktu = store.catatanWaktu.filter((c: any) => c.id !== incoming.deleteId);
+      } else if (incoming.deleteType === 'atlet') {
+        store.atlet = store.atlet.filter((a: any) => a.id !== incoming.deleteId);
+      } else if (incoming.deleteType === 'lomba') {
+        store.lomba = store.lomba.filter((l: any) => l.id !== incoming.deleteId);
+      }
+    }
 
     // 1. Merge Atlet (keyed by ID or Nama)
     if (Array.isArray(incoming.atlet) && incoming.atlet.length > 0) {
@@ -336,6 +424,17 @@ app.post('/api/data/sync', (req, res) => {
     }
 
     writeDataStore(store);
+
+    // REAL-TIME AUTO-SAVE TO GOOGLE SPREADSHEET:
+    // When coach adds/updates an athlete, competition, swim time, or program,
+    // immediately forward it to the Google Apps Script Web App without requiring manual "Kirim" clicks!
+    const webAppUrl = store.config?.webAppUrl;
+    if (webAppUrl) {
+      if (incoming.action && incoming.item) {
+        // Asynchronously forward to Google Sheets in background
+        pushItemToGoogleSheets(webAppUrl, incoming.action, incoming.item);
+      }
+    }
 
     return res.json({
       success: true,
@@ -425,12 +524,26 @@ app.post('/api/sheets/proxy-push', async (req, res) => {
     });
 
     const data = await resp.json().catch(() => ({}));
+
+    // If GAS doesn't have batchSync action, fallback to individual endpoints
+    if (data && data.error) {
+      for (const a of store.atlet) {
+        await pushItemToGoogleSheets(webAppUrl, 'saveAtlet', a);
+      }
+      for (const l of store.lomba) {
+        await pushItemToGoogleSheets(webAppUrl, 'saveLomba', l);
+      }
+      for (const c of store.catatanWaktu) {
+        await pushItemToGoogleSheets(webAppUrl, 'saveCatatanWaktu', c);
+      }
+    }
+
     store.config.lastSync = new Date().toISOString();
     writeDataStore(store);
 
     return res.json({
       success: true,
-      message: data.message || 'Semua rekapan berhasil dikirim dan tersimpan di Google Spreadsheet!',
+      message: 'Semua rekapan berhasil disinkronkan dan tersimpan di Google Spreadsheet!',
       data: store
     });
   } catch (err: any) {

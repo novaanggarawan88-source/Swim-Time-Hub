@@ -281,35 +281,48 @@ export const RekapanSpreadsheetView: React.FC<RekapanSpreadsheetViewProps> = ({
 
           {/* Action Button Group */}
           <div className="flex flex-wrap items-center gap-2 pt-2 lg:pt-0">
-            <button
-              onClick={handlePullFromSheets}
-              disabled={isSyncing}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all active:scale-95 disabled:opacity-50"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span>{isSyncing ? 'Menarik...' : 'Tarik dari Spreadsheet'}</span>
-            </button>
-
-            <button
-              onClick={handlePushToSheets}
-              disabled={isSyncing}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-cyan-700 hover:bg-cyan-600 text-white font-bold text-xs shadow-md transition-all active:scale-95 disabled:opacity-50"
-            >
-              <UploadCloud className="w-3.5 h-3.5" />
-              <span>Kirim ke Spreadsheet</span>
-            </button>
-
             {googleSpreadsheetDirectUrl && (
               <a
                 href={googleSpreadsheetDirectUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold text-xs border border-slate-700 transition-all"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Buka Sheet</span>
+                <span>Buka Google Spreadsheet</span>
               </a>
             )}
+
+            <button
+              onClick={onRefreshData}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition-all active:scale-95"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Segarkan Layar</span>
+            </button>
+
+            {/* Optional Manual Fallback Button Menu */}
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={handlePullFromSheets}
+                disabled={isSyncing}
+                title="Tarik manual bila baru saja mengedit langsung di Google Sheets"
+                className="flex items-center gap-1 px-3 py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-300 font-semibold text-[11px] border border-slate-700 transition-all disabled:opacity-50"
+              >
+                <DownloadCloud className={`w-3.5 h-3.5 text-cyan-400 ${isSyncing ? 'animate-spin' : ''}`} />
+                <span>{isSyncing ? 'Menarik...' : 'Tarik Manual'}</span>
+              </button>
+
+              <button
+                onClick={handlePushToSheets}
+                disabled={isSyncing}
+                title="Kirim semua data sebagai cadangan manual"
+                className="flex items-center gap-1 px-3 py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-300 font-semibold text-[11px] border border-slate-700 transition-all disabled:opacity-50"
+              >
+                <UploadCloud className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Kirim Manual</span>
+              </button>
+            </div>
 
             <button
               onClick={onOpenSettings}
@@ -317,14 +330,6 @@ export const RekapanSpreadsheetView: React.FC<RekapanSpreadsheetViewProps> = ({
             >
               <Settings className="w-3.5 h-3.5" />
               <span>Pengaturan</span>
-            </button>
-
-            <button
-              onClick={() => setShowExplanation(!showExplanation)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-xs border border-amber-500/40 transition-all"
-            >
-              <HelpCircle className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Kenapa Beda Device?</span>
             </button>
           </div>
         </div>

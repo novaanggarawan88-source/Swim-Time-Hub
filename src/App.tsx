@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { SwimDataService } from './services/dataService';
+import { SwimDataService, SyncStatus } from './services/dataService';
 import { Atlet, Lomba, CatatanWaktu, ProgramLatihanItem } from './types/swim';
 import { Navbar } from './components/Navbar';
 import { DashboardView } from './components/DashboardView';
@@ -44,6 +44,7 @@ export default function App() {
   const [isSheetsOpen, setIsSheetsOpen] = useState<boolean>(false);
   const [hasSheetsUrl, setHasSheetsUrl] = useState<boolean>(false);
   const [sheetsConfig, setSheetsConfig] = useState(SwimDataService.getConfig());
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
 
   // Load Initial Data
   const refreshData = () => {
@@ -58,17 +59,48 @@ export default function App() {
 
   useEffect(() => {
     refreshData();
-    // Fetch central multi-device server data
+    // Initial fetch from central server (which also pulls from Google Spreadsheet)
     SwimDataService.initSync().then(() => {
       refreshData();
     });
 
     // Subscribe to cross-tab or server-sync data changes
-    const unsubscribe = SwimDataService.subscribe(() => {
+    const unsubscribeData = SwimDataService.subscribe(() => {
       refreshData();
     });
 
-    return () => unsubscribe();
+    // Subscribe to real-time auto-sync status (saving, saved, idle)
+    const unsubscribeStatus = SwimDataService.subscribeSyncStatus((status) => {
+      setSyncStatus(status);
+    });
+
+    // Real-Time Background Polling:
+    // Polls central server every 4 seconds so entries made on mobile phone
+    // appear immediately on laptop (and vice versa) without needing manual clicks!
+    const pollInterval = setInterval(() => {
+      SwimDataService.initSync();
+    }, 4000);
+
+    // Also sync immediately when user switches tabs or unlocks their phone
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        SwimDataService.initSync();
+      }
+    };
+    const handleFocus = () => {
+      SwimDataService.initSync();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      unsubscribeData();
+      unsubscribeStatus();
+      clearInterval(pollInterval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   // Data Actions
@@ -120,6 +152,7 @@ export default function App() {
         openStopwatchModal={() => setIsStopwatchOpen(true)}
         openSheetsModal={() => setIsSheetsOpen(true)}
         hasSheetsUrl={hasSheetsUrl}
+        syncStatus={syncStatus}
       />
 
       {/* Main Content Area */}

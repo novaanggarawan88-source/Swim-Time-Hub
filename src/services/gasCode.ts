@@ -611,6 +611,12 @@ function doPost(e) {
     else if (action === "saveLomba") output = saveLomba(body.data);
     else if (action === "saveCatatanWaktu") output = saveCatatanWaktu(body.data);
     else if (action === "saveProgramLatihan") output = saveProgramLatihan(body.data);
+    else if (action === "batchSync") {
+      if (Array.isArray(body.atlet)) body.atlet.forEach(saveAtlet);
+      if (Array.isArray(body.lomba)) body.lomba.forEach(saveLomba);
+      if (Array.isArray(body.catatanWaktu)) body.catatanWaktu.forEach(saveCatatanWaktu);
+      output = { status: "success", message: "Batch sync berhasil disinkronkan ke Spreadsheet" };
+    }
     else if (action === "setup") output = setupSpreadsheet();
     else output = { error: "Action tidak dikenal" };
   } catch (err) {
