@@ -43,6 +43,7 @@ export default function App() {
   const [isStopwatchOpen, setIsStopwatchOpen] = useState<boolean>(false);
   const [isSheetsOpen, setIsSheetsOpen] = useState<boolean>(false);
   const [hasSheetsUrl, setHasSheetsUrl] = useState<boolean>(false);
+  const [sheetsConfig, setSheetsConfig] = useState(SwimDataService.getConfig());
 
   // Load Initial Data
   const refreshData = () => {
@@ -51,6 +52,7 @@ export default function App() {
     setRecords(SwimDataService.getCatatanWaktu());
     setPrograms(SwimDataService.getProgramLatihan());
     const cfg = SwimDataService.getConfig();
+    setSheetsConfig(cfg);
     setHasSheetsUrl(Boolean(cfg.webAppUrl));
   };
 
@@ -193,6 +195,7 @@ export default function App() {
             competitions={competitions}
             records={records}
             programs={programs}
+            config={sheetsConfig}
             onOpenSettings={() => setIsSheetsOpen(true)}
             onRefreshData={refreshData}
           />

@@ -442,10 +442,15 @@ export class SwimDataService {
     }
   }
 
-  static saveConfig(config: GoogleSheetsConfig): void {
+  static async saveConfig(config: GoogleSheetsConfig): Promise<boolean> {
     localStorage.setItem(STORAGE_KEYS.GAS_CONFIG, JSON.stringify(config));
-    this.syncWithServer();
     this.notifySubscribers();
+    try {
+      await this.syncWithServer();
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   // Multi-Device Server Synchronization: Initial Load & Merge
@@ -459,29 +464,101 @@ export class SwimDataService {
       const serverData = json.data;
       let hasChanges = false;
 
-      // Update LocalStorage from Server
-      if (Array.isArray(serverData.atlet) && serverData.atlet.length > 0) {
-        localStorage.setItem(STORAGE_KEYS.ATLET, JSON.stringify(serverData.atlet));
-        hasChanges = true;
-      }
-      if (Array.isArray(serverData.lomba) && serverData.lomba.length > 0) {
-        localStorage.setItem(STORAGE_KEYS.LOMBA, JSON.stringify(serverData.lomba));
-        hasChanges = true;
-      }
-      if (Array.isArray(serverData.catatanWaktu) && serverData.catatanWaktu.length > 0) {
-        localStorage.setItem(STORAGE_KEYS.CATATAN_WAKTU, JSON.stringify(serverData.catatanWaktu));
-        hasChanges = true;
-      }
-      if (Array.isArray(serverData.programLatihan)) {
-        localStorage.setItem(STORAGE_KEYS.PROGRAM_LATIHAN, JSON.stringify(serverData.programLatihan));
-        hasChanges = true;
-      }
-      if (serverData.config && serverData.config.webAppUrl) {
-        const curConfig = this.getConfig();
-        if (!curConfig.webAppUrl) {
-          localStorage.setItem(STORAGE_KEYS.GAS_CONFIG, JSON.stringify(serverData.config));
-          hasChanges = true;
+      // 1. Two-way merge for Atlet
+      const localAtlets = this.getAtlet();
+      const serverAtlets = Array.isArray(serverData.atlet) ? serverData.atlet : [];
+      const mergedAtletsMap = new Map<string, any>();
+      serverAtlets.forEach((a: any) => a?.id && mergedAtletsMap.set(a.id, a));
+      localAtlets.forEach((a: any) => {
+        if (a?.id) {
+          const serverVer = mergedAtletsMap.get(a.id);
+          mergedAtletsMap.set(a.id, serverVer ? { ...serverVer, ...a } : a);
         }
+      });
+      const mergedAtlets = Array.from(mergedAtletsMap.values());
+      const hasNewLocalAtlet = localAtlets.some(la => !serverAtlets.some((sa: any) => sa.id === la.id));
+      if (mergedAtlets.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.ATLET, JSON.stringify(mergedAtlets));
+        hasChanges = true;
+      }
+
+      // 2. Two-way merge for Lomba
+      const localLomba = this.getLomba();
+      const serverLomba = Array.isArray(serverData.lomba) ? serverData.lomba : [];
+      const mergedLombaMap = new Map<string, any>();
+      serverLomba.forEach((l: any) => l?.id && mergedLombaMap.set(l.id, l));
+      localLomba.forEach((l: any) => {
+        if (l?.id) {
+          const serverVer = mergedLombaMap.get(l.id);
+          mergedLombaMap.set(l.id, serverVer ? { ...serverVer, ...l } : l);
+        }
+      });
+      const mergedLomba = Array.from(mergedLombaMap.values());
+      const hasNewLocalLomba = localLomba.some(ll => !serverLomba.some((sl: any) => sl.id === ll.id));
+      if (mergedLomba.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.LOMBA, JSON.stringify(mergedLomba));
+        hasChanges = true;
+      }
+
+      // 3. Two-way merge for Catatan Waktu
+      const localRecords = this.getCatatanWaktu();
+      const serverRecords = Array.isArray(serverData.catatanWaktu) ? serverData.catatanWaktu : [];
+      const mergedRecordsMap = new Map<string, any>();
+      serverRecords.forEach((r: any) => r?.id && mergedRecordsMap.set(r.id, r));
+      localRecords.forEach((r: any) => {
+        if (r?.id) {
+          const serverVer = mergedRecordsMap.get(r.id);
+          mergedRecordsMap.set(r.id, serverVer ? { ...serverVer, ...r } : r);
+        }
+      });
+      const mergedRecords = Array.from(mergedRecordsMap.values());
+      const hasNewLocalRecord = localRecords.some(lr => !serverRecords.some((sr: any) => sr.id === lr.id));
+      if (mergedRecords.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.CATATAN_WAKTU, JSON.stringify(mergedRecords));
+        hasChanges = true;
+      }
+
+      // 4. Two-way merge for Program Latihan
+      const localPrograms = this.getProgramLatihan();
+      const serverPrograms = Array.isArray(serverData.programLatihan) ? serverData.programLatihan : [];
+      const mergedProgramsMap = new Map<string, any>();
+      serverPrograms.forEach((p: any) => p?.id && mergedProgramsMap.set(p.id, p));
+      localPrograms.forEach((p: any) => {
+        if (p?.id) {
+          const serverVer = mergedProgramsMap.get(p.id);
+          mergedProgramsMap.set(p.id, serverVer ? { ...serverVer, ...p } : p);
+        }
+      });
+      const mergedPrograms = Array.from(mergedProgramsMap.values());
+      const hasNewLocalProgram = localPrograms.some(lp => !serverPrograms.some((sp: any) => sp.id === lp.id));
+      if (mergedPrograms.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.PROGRAM_LATIHAN, JSON.stringify(mergedPrograms));
+        hasChanges = true;
+      }
+
+      // 5. Update Config if provided
+      let shouldPushToServer = hasNewLocalAtlet || hasNewLocalLomba || hasNewLocalRecord || hasNewLocalProgram;
+      if (serverData.config) {
+        const curConfig = this.getConfig();
+        const serverCfg = serverData.config;
+        // If server has webAppUrl or spreadsheetId, ensure it replaces empty or outdated local config
+        if (serverCfg.webAppUrl || serverCfg.spreadsheetId) {
+          if (curConfig.webAppUrl !== serverCfg.webAppUrl || curConfig.spreadsheetId !== serverCfg.spreadsheetId) {
+            localStorage.setItem(STORAGE_KEYS.GAS_CONFIG, JSON.stringify({
+              ...curConfig,
+              ...serverCfg
+            }));
+            hasChanges = true;
+          }
+        } else if (curConfig.webAppUrl || curConfig.spreadsheetId) {
+          // Current device (e.g. laptop) has config stored in localStorage, but server doesn't have it yet!
+          shouldPushToServer = true;
+        }
+      }
+
+      if (shouldPushToServer) {
+        // Automatically sync merged and local data to server
+        this.syncWithServer();
       }
 
       if (hasChanges) {

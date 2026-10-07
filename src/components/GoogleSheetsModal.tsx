@@ -35,6 +35,15 @@ export const GoogleSheetsModal: React.FC<GoogleSheetsModalProps> = ({
   const [spreadsheetId, setSpreadsheetId] = useState(initialConfig.spreadsheetId || '');
   const [isSyncing, setIsSyncing] = useState(false);
 
+  // Re-synchronize inputs whenever modal is opened or external config updates
+  React.useEffect(() => {
+    if (isOpen) {
+      const cfg = SwimDataService.getConfig();
+      setWebAppUrl(cfg.webAppUrl || '');
+      setSpreadsheetId(cfg.spreadsheetId || '');
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleCopy = (text: string, key: string) => {
@@ -53,19 +62,22 @@ export const GoogleSheetsModal: React.FC<GoogleSheetsModalProps> = ({
     });
   };
 
-  const handleSaveConfig = () => {
-    SwimDataService.saveConfig({
+  const handleSaveConfig = async () => {
+    setIsSyncing(true);
+    await SwimDataService.saveConfig({
       webAppUrl: webAppUrl.trim(),
       spreadsheetId: spreadsheetId.trim(),
       autoSync: true,
       lastSync: new Date().toISOString()
     });
+    setIsSyncing(false);
+    onDataSynced();
 
     Swal.fire({
       icon: 'success',
       title: 'Pengaturan Disimpan!',
-      text: 'URL Web App & Spreadsheet ID berhasil disimpan.',
-      timer: 1500,
+      text: 'URL Web App & Spreadsheet ID berhasil disimpan dan disinkronkan ke seluruh perangkat (HP & Laptop).',
+      timer: 2000,
       showConfirmButton: false,
       background: '#0f172a',
       color: '#f8fafc'

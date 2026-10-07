@@ -29,6 +29,7 @@ interface RekapanSpreadsheetViewProps {
   competitions: Lomba[];
   records: CatatanWaktu[];
   programs: ProgramLatihanItem[];
+  config?: GoogleSheetsConfig;
   onOpenSettings: () => void;
   onRefreshData: () => void;
 }
@@ -38,6 +39,7 @@ export const RekapanSpreadsheetView: React.FC<RekapanSpreadsheetViewProps> = ({
   competitions,
   records,
   programs,
+  config: propConfig,
   onOpenSettings,
   onRefreshData
 }) => {
@@ -47,7 +49,7 @@ export const RekapanSpreadsheetView: React.FC<RekapanSpreadsheetViewProps> = ({
   const [isSyncing, setIsSyncing] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
 
-  const config: GoogleSheetsConfig = SwimDataService.getConfig();
+  const config: GoogleSheetsConfig = propConfig || SwimDataService.getConfig();
   const isConnected = Boolean(config.webAppUrl);
 
   // Manual Trigger: Pull from Google Spreadsheet

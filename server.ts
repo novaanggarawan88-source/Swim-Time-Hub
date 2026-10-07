@@ -322,9 +322,17 @@ app.post('/api/data/sync', (req, res) => {
       store.programLatihan = Array.from(existingMap.values());
     }
 
-    // 5. Update Config if provided
+    // 5. Update Config if provided (protect non-empty server values from being wiped by uninitialized clients)
     if (incoming.config) {
-      store.config = { ...store.config, ...incoming.config };
+      const incomingUrl = typeof incoming.config.webAppUrl === 'string' ? incoming.config.webAppUrl.trim() : '';
+      const incomingId = typeof incoming.config.spreadsheetId === 'string' ? incoming.config.spreadsheetId.trim() : '';
+      
+      store.config = {
+        webAppUrl: incomingUrl || store.config?.webAppUrl || '',
+        spreadsheetId: incomingId || store.config?.spreadsheetId || '',
+        autoSync: incoming.config.autoSync !== undefined ? incoming.config.autoSync : (store.config?.autoSync ?? true),
+        lastSync: incoming.config.lastSync || store.config?.lastSync || ''
+      };
     }
 
     writeDataStore(store);
