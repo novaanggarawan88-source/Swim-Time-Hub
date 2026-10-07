@@ -64,24 +64,45 @@ export const GoogleSheetsModal: React.FC<GoogleSheetsModalProps> = ({
 
   const handleSaveConfig = async () => {
     setIsSyncing(true);
-    await SwimDataService.saveConfig({
+    // Auto extract spreadsheet ID if user pasted full URL (e.g. https://docs.google.com/spreadsheets/d/XXX/edit)
+    let cleanId = spreadsheetId.trim();
+    const idMatch = cleanId.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    if (idMatch && idMatch[1]) {
+      cleanId = idMatch[1];
+      setSpreadsheetId(cleanId);
+    }
+
+    const savedConfig = {
       webAppUrl: webAppUrl.trim(),
-      spreadsheetId: spreadsheetId.trim(),
+      spreadsheetId: cleanId,
       autoSync: true,
       lastSync: new Date().toISOString()
-    });
+    };
+
+    const ok = await SwimDataService.saveConfig(savedConfig);
     setIsSyncing(false);
     onDataSynced();
 
-    Swal.fire({
-      icon: 'success',
-      title: 'Pengaturan Disimpan!',
-      text: 'URL Web App & Spreadsheet ID berhasil disimpan dan disinkronkan ke seluruh perangkat (HP & Laptop).',
-      timer: 2000,
-      showConfirmButton: false,
-      background: '#0f172a',
-      color: '#f8fafc'
-    });
+    if (ok) {
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil Disimpan & Disinkronkan!',
+        text: 'URL Web App & Spreadsheet ID kini aktif untuk semua perangkat (HP & Laptop).',
+        timer: 2500,
+        showConfirmButton: true,
+        confirmButtonColor: '#059669',
+        background: '#0f172a',
+        color: '#f8fafc'
+      });
+    } else {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Tersimpan Lokal',
+        text: 'Pengaturan tersimpan di perangkat ini. Cek koneksi internet untuk sinkronisasi cloud.',
+        background: '#0f172a',
+        color: '#f8fafc'
+      });
+    }
   };
 
   const handleTestConnection = async () => {
@@ -285,23 +306,31 @@ export const GoogleSheetsModal: React.FC<GoogleSheetsModalProps> = ({
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Google Spreadsheet ID
+                    Google Spreadsheet ID (atau Link URL Spreadsheet Lengkap)
                   </label>
                   <input
                     type="text"
                     value={spreadsheetId}
                     onChange={e => setSpreadsheetId(e.target.value)}
-                    placeholder="Contoh: 1BxiMVs0XR..."
+                    placeholder="Contoh: 1BxiMVs0XR... atau paste link spreadsheet Anda"
                     className="w-full bg-slate-900 border border-slate-700 text-slate-100 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-mono focus:border-emerald-400 focus:outline-none"
                   />
+                  <small className="text-[11px] text-slate-400 mt-1 block">
+                    Bisa masukkan ID saja atau langsung paste tautan Google Sheets lengkap.
+                  </small>
+                </div>
+
+                <div className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl text-[11px] text-slate-300 flex items-center gap-2">
+                  <span className="text-emerald-400 font-bold">☁️ Sinkronisasi Multi-Device:</span>
+                  <span>Cukup disimpan sekali di sini (baik dari HP maupun Laptop), maka kedua perangkat akan otomatis tersinkron.</span>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 pt-2">
                   <button
                     onClick={handleSaveConfig}
-                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow"
+                    className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg flex items-center gap-1.5 transition-all"
                   >
-                    Simpan Pengaturan
+                    <span>Simpan & Sinkronkan (HP & Laptop)</span>
                   </button>
 
                   <button

@@ -386,6 +386,32 @@ export const RekapanSpreadsheetView: React.FC<RekapanSpreadsheetViewProps> = ({
         </div>
       </div>
 
+      {/* Unconnected Warning Card */}
+      {!isConnected && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/40 text-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg animate-fadeIn">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+              <AlertCircle className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-amber-300 text-sm">
+                Google Spreadsheet Belum Terhubung
+              </h3>
+              <p className="text-xs text-slate-300 mt-0.5 leading-relaxed">
+                Tautan Web App & Spreadsheet ID belum tersimpan di server pusat. Cukup masukkan sekali via tombol <b>Hubungkan Sekarang</b> di bawah (bisa dari HP atau Laptop), maka semua perangkat akan otomatis terhubung!
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onOpenSettings}
+            className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shrink-0 shadow-lg transition-all flex items-center justify-center gap-1.5 active:scale-95"
+          >
+            <Settings className="w-3.5 h-3.5" />
+            <span>Hubungkan Sekarang</span>
+          </button>
+        </div>
+      )}
+
       {/* Metric Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div 
