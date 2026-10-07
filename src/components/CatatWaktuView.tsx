@@ -10,6 +10,8 @@ import {
   timeStringToSeconds, 
   secondsToTimeString, 
   computePBForEvent, 
+  autoFormatTimeInput,
+  normalizeSwimTime,
   sanitizeTimeInput 
 } from '../utils/timeUtils';
 import Swal from 'sweetalert2';
@@ -356,25 +358,75 @@ export const CatatWaktuView: React.FC<CatatWaktuViewProps> = ({
               <div className="relative">
                 <input
                   type="text"
+                  inputMode="decimal"
+                  pattern="[0-9:.,]*"
                   required
                   value={waktuInput}
-                  onChange={e => setWaktuInput(sanitizeTimeInput(e.target.value))}
+                  onChange={e => setWaktuInput(autoFormatTimeInput(e.target.value, waktuInput))}
+                  onBlur={() => setWaktuInput(normalizeSwimTime(waktuInput))}
                   placeholder="00:35.42"
                   className="w-full bg-slate-950 border-2 border-cyan-500/50 text-cyan-300 text-center font-mono text-3xl sm:text-4xl font-extrabold rounded-2xl py-3.5 tracking-wider focus:border-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-500/20"
                 />
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-2 mt-2 text-xs text-slate-400">
-                <span>Format: Menit : Detik . Ratusan (Contoh: 00:35.42 atau 01:12.30)</span>
-                {/* Fast presets for convenience */}
-                <div className="flex items-center gap-1">
-                  <span className="text-slate-500 text-[10px]">Cepat:</span>
-                  {['00:32.50', '00:34.20', '00:35.42', '01:10.00'].map(preset => (
+              {/* Poolside Helper & Touch Keypad */}
+              <div className="mt-2.5 space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300">
+                  <span className="flex items-center gap-1.5 text-cyan-300 font-medium text-[11px] sm:text-xs">
+                    <Sparkles className="w-3.5 h-3.5 text-yellow-300 shrink-0" />
+                    <span><b>Otomatis Tanda : & ,</b> Ketik angka (misal: <b>3542</b> atau <b>35,42</b>), sistem otomatis mengisi titik dua (:) dan koma/titik (.)</span>
+                  </span>
+                </div>
+
+                {/* Touch Quick Keypad for Poolside */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Tombol Cepat:</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!waktuInput) setWaktuInput('00:');
+                      else if (!waktuInput.includes(':')) setWaktuInput(`00:${waktuInput}`);
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-cyan-950 hover:bg-cyan-900 border border-cyan-700/60 text-cyan-300 text-xs font-mono font-bold transition-all active:scale-95"
+                  >
+                    + 00:
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!waktuInput.includes(':')) setWaktuInput(waktuInput + ':');
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-xs font-mono font-bold transition-all active:scale-95"
+                  >
+                    : (Titik Dua)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!waktuInput.includes('.')) setWaktuInput(waktuInput + '.');
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-xs font-mono font-bold transition-all active:scale-95"
+                  >
+                    , / . (Koma)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setWaktuInput('')}
+                    className="px-2.5 py-1 rounded-lg bg-rose-950/60 hover:bg-rose-900 border border-rose-800/60 text-rose-300 text-xs font-bold transition-all active:scale-95 ml-auto"
+                  >
+                    Hapus (C)
+                  </button>
+                </div>
+
+                {/* Fast Presets */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase mr-1">Contoh:</span>
+                  {['00:32.50', '00:33.95', '00:35.42', '00:39.50', '01:05.20', '01:12.30'].map(preset => (
                     <button
                       type="button"
                       key={preset}
                       onClick={() => setWaktuInput(preset)}
-                      className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-mono"
+                      className="px-2 py-0.5 rounded-md bg-slate-800/90 hover:bg-slate-700 text-slate-300 text-xs font-mono transition-colors"
                     >
                       {preset}
                     </button>

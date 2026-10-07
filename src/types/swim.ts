@@ -74,9 +74,18 @@ export interface PersonalBestInfo {
   history: CatatanWaktu[];
 }
 
+export interface AIPembahasanSesiItem {
+  sesi: string;
+  fokus: string;
+  target: string;
+  penjelasan: string;
+  tipsKunci: string;
+}
+
 export interface AIPembahasanOutput {
   ringkasanStrategi: string;
   analisisFisiologi: string;
+  bedahSesiHarian?: AIPembahasanSesiItem[];
   petunjukTepiKolam: string[];
   panduanPemulihan: string;
   pesanMotivasi: string;

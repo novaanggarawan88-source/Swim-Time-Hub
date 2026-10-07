@@ -7,9 +7,16 @@ import {
   ProgramLatihanItem,
   AIPembahasanOutput
 } from '../types/swim';
-import { computePBForEvent, formatSecondsToTime, secondsToTimeString, sanitizeTimeInput } from '../utils/timeUtils';
+import { 
+  computePBForEvent, 
+  formatSecondsToTime, 
+  secondsToTimeString, 
+  autoFormatTimeInput,
+  normalizeSwimTime,
+  sanitizeTimeInput 
+} from '../utils/timeUtils';
 import { generateTrainingProgram, TrainingRecommendationOutput } from '../utils/trainingGenerator';
-import { fetchAIPembahasan } from '../utils/aiPembahasan';
+import { fetchAIPembahasan, askAIKonsultasi } from '../utils/aiPembahasan';
 import Swal from 'sweetalert2';
 import { 
   ClipboardList, 
@@ -34,7 +41,9 @@ import {
   RefreshCw,
   Flame,
   HeartPulse,
-  BookOpen
+  BookOpen,
+  MessageSquare,
+  Send
 } from 'lucide-react';
 
 interface ProgramLatihanViewProps {
@@ -67,6 +76,11 @@ export const ProgramLatihanView: React.FC<ProgramLatihanViewProps> = ({
   const [isCopiedAI, setIsCopiedAI] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'generator' | 'riwayat'>('generator');
 
+  // Interactive AI Q&A Consultation State
+  const [pertanyaanAI, setPertanyaanAI] = useState<string>('');
+  const [jawabanAI, setJawabanAI] = useState<string>('');
+  const [isLoadingTanya, setIsLoadingTanya] = useState<boolean>(false);
+
   // When Swimmer or Event changes, recalculate default target
   useEffect(() => {
     if (selectedAtlet) {
@@ -80,6 +94,63 @@ export const ProgramLatihanView: React.FC<ProgramLatihanViewProps> = ({
       }
     }
   }, [selectedAtlet, gaya, jarak, records]);
+
+  // Pre-generate initial program & AI discussion if none exists yet
+  useEffect(() => {
+    if (!recommendation && selectedAtlet) {
+      const pb = computePBForEvent(records, selectedAtlet, gaya, jarak);
+      const defaultTarget = pb ? formatSecondsToTime(Number((pb.pbDetik * 0.985).toFixed(2))) : '00:33.50';
+      const result = generateTrainingProgram(records, selectedAtlet, gaya, jarak, defaultTarget, lamaMinggu);
+      setRecommendation(result);
+      setEditableRows([...result.items]);
+      setIsLoadingAI(true);
+      fetchAIPembahasan({
+        atlet: selectedAtlet,
+        gaya,
+        jarak,
+        pbWaktu: result.pbWaktu,
+        pbDetik: result.pbDetik,
+        waktuTerakhir: result.waktuTerakhir,
+        waktuTerakhirDetik: result.waktuTerakhirDetik,
+        targetWaktu: result.targetWaktu,
+        targetDetik: result.targetDetik,
+        lamaMinggu,
+        statusKondisi: result.statusKondisi,
+        statusLabel: result.statusLabel,
+        items: result.items
+      }).then(aiRes => {
+        setPembahasanAI(aiRes);
+      }).catch(err => {
+        console.warn('Initial AI fetch error:', err);
+      }).finally(() => {
+        setIsLoadingAI(false);
+      });
+    }
+  }, [selectedAtlet]);
+
+  const handleAskAI = async (customPrompt?: string) => {
+    const q = (customPrompt || pertanyaanAI).trim();
+    if (!q) return;
+    setIsLoadingTanya(true);
+    setJawabanAI('');
+    try {
+      const ans = await askAIKonsultasi(q, {
+        atlet: selectedAtlet,
+        gaya,
+        jarak,
+        pb: recommendation?.pbWaktu,
+        waktuTerakhir: recommendation?.waktuTerakhir,
+        target: recommendation?.targetWaktu,
+        status: recommendation?.statusLabel,
+        sesi: editableRows
+      });
+      setJawabanAI(ans);
+    } catch {
+      setJawabanAI('Gagal mendapatkan respon AI saat ini. Silakan coba kembali.');
+    } finally {
+      setIsLoadingTanya(false);
+    }
+  };
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,14 +260,19 @@ ${pembahasanAI.ringkasanStrategi}
 
 2. ANALISIS FISIOLOGI & SISTEM ENERGI:
 ${pembahasanAI.analisisFisiologi}
-
-3. PETUNJUK TEKNIS DI PINGGIR KOLAM (COACHING CUES):
+${pembahasanAI.bedahSesiHarian && pembahasanAI.bedahSesiHarian.length > 0 ? `
+3. PEMBAHASAN DETAIL SESI DEMI SESI:
+${pembahasanAI.bedahSesiHarian.map((s, i) => `${i + 1}. ${s.sesi} (Fokus: ${s.fokus} | Target: ${s.target})
+   - Alasan & Manfaat: ${s.penjelasan}
+   - Tips Kunci: ${s.tipsKunci}`).join('\n\n')}
+` : ''}
+4. PETUNJUK TEKNIS DI PINGGIR KOLAM (COACHING CUES):
 ${pembahasanAI.petunjukTepiKolam.map((c, i) => `${i + 1}. ${c}`).join('\n')}
 
-4. PANDUAN PEMULIHAN & NUTRISI:
+5. PANDUAN PEMULIHAN & NUTRISI:
 ${pembahasanAI.panduanPemulihan}
 
-5. PESAN MOTIVASI ATLET:
+6. PESAN MOTIVASI ATLET:
 "${pembahasanAI.pesanMotivasi}"
 
 Disusun oleh Swim Time Tracker AI System`;
@@ -217,9 +293,13 @@ Disusun oleh Swim Time Tracker AI System`;
 
   const handleRowChange = (index: number, field: keyof ProgramLatihanItem, value: any) => {
     const updated = [...editableRows];
+    let val = value;
+    if (field === 'targetWaktu') {
+      val = autoFormatTimeInput(value, updated[index]?.targetWaktu || '');
+    }
     updated[index] = {
       ...updated[index],
-      [field]: value
+      [field]: val
     };
     setEditableRows(updated);
   };
@@ -364,14 +444,20 @@ Disusun oleh Swim Time Tracker AI System`;
 
                 {/* 4. Target Waktu */}
                 <div>
-                  <label className="block text-xs font-bold text-cyan-300 uppercase tracking-wider mb-1.5">
-                    Target Waktu (MM:SS.hh) *
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-bold text-cyan-300 uppercase tracking-wider">
+                      Target Waktu *
+                    </label>
+                    <span className="text-[10px] text-cyan-400 font-mono">Otomatis : & .</span>
+                  </div>
                   <input
                     type="text"
+                    inputMode="decimal"
+                    pattern="[0-9:.,]*"
                     required
                     value={targetWaktu}
-                    onChange={e => setTargetWaktu(sanitizeTimeInput(e.target.value))}
+                    onChange={e => setTargetWaktu(autoFormatTimeInput(e.target.value, targetWaktu))}
+                    onBlur={() => setTargetWaktu(normalizeSwimTime(targetWaktu))}
                     placeholder="00:33.50"
                     className="w-full bg-slate-900 border border-cyan-500/50 text-cyan-300 font-mono font-bold rounded-xl px-3.5 py-2.5 text-sm focus:border-cyan-400 focus:outline-none"
                   />
@@ -664,11 +750,52 @@ Disusun oleh Swim Time Tracker AI System`;
                       </p>
                     </div>
 
-                    {/* 3. Petunjuk Teknis di Tepi Kolam (Poolside Coaching Cues) */}
+                    {/* 3. Pembahasan Rinci Sesi Demi Sesi Latihan (Bedah Sesi Harian) */}
+                    {pembahasanAI.bedahSesiHarian && pembahasanAI.bedahSesiHarian.length > 0 && (
+                      <div className="p-4 sm:p-5 bg-slate-800/80 rounded-2xl border border-cyan-900/50 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-sky-400 font-extrabold text-sm uppercase tracking-wider">
+                            <BookOpen className="w-4 h-4" />
+                            <span>3. Pembahasan Rinci Sesi Demi Sesi Latihan (Tujuan & Alasan Latihan)</span>
+                          </div>
+                          <span className="text-[11px] text-slate-400">
+                            {pembahasanAI.bedahSesiHarian.length} Sesi Teranalisis
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {pembahasanAI.bedahSesiHarian.map((sesiItem, sIdx) => (
+                            <div key={sIdx} className="bg-slate-900/90 p-4 rounded-xl border border-slate-700/80 space-y-2 flex flex-col justify-between">
+                              <div>
+                                <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-2 mb-2">
+                                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                                    {sesiItem.sesi}
+                                  </span>
+                                  <span className="text-xs font-mono font-bold text-amber-300">
+                                    Target: {sesiItem.target}
+                                  </span>
+                                </div>
+                                <div className="text-xs font-bold text-white mb-1">
+                                  Fokus: <span className="text-cyan-300">{sesiItem.fokus}</span>
+                                </div>
+                                <p className="text-xs text-slate-300 leading-relaxed">
+                                  {sesiItem.penjelasan}
+                                </p>
+                              </div>
+                              <div className="pt-2 border-t border-slate-800/70 text-[11px] text-emerald-400 flex items-start gap-1.5">
+                                <span className="font-bold shrink-0">💡 Kunci:</span>
+                                <span className="text-slate-300">{sesiItem.tipsKunci}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 4. Petunjuk Teknis di Tepi Kolam (Poolside Coaching Cues) */}
                     <div className="p-4 sm:p-5 bg-slate-800/80 rounded-2xl border border-cyan-900/50 space-y-3">
                       <div className="flex items-center gap-2 text-emerald-400 font-extrabold text-sm uppercase tracking-wider">
                         <EyeIcon className="w-4 h-4" />
-                        <span>3. Petunjuk Praktis di Tepi Kolam (Apa yang Harus Diamati Pelatih)</span>
+                        <span>4. Petunjuk Praktis di Tepi Kolam (Apa yang Harus Diamati Pelatih)</span>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         {pembahasanAI.petunjukTepiKolam.map((cue, idx) => (
@@ -684,13 +811,13 @@ Disusun oleh Swim Time Tracker AI System`;
                       </div>
                     </div>
 
-                    {/* 4 & 5: Pemulihan & Motivasi */}
+                    {/* 5 & 6: Pemulihan & Motivasi */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Pemulihan */}
                       <div className="p-4 sm:p-5 bg-slate-800/80 rounded-2xl border border-cyan-900/50 space-y-2">
                         <div className="flex items-center gap-2 text-rose-400 font-extrabold text-sm uppercase tracking-wider">
                           <HeartPulse className="w-4 h-4" />
-                          <span>4. Panduan Pemulihan & Nutrisi Atlet</span>
+                          <span>5. Panduan Pemulihan & Nutrisi Atlet</span>
                         </div>
                         <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
                           {pembahasanAI.panduanPemulihan}
@@ -702,7 +829,7 @@ Disusun oleh Swim Time Tracker AI System`;
                         <div>
                           <div className="flex items-center gap-2 text-yellow-300 font-extrabold text-sm uppercase tracking-wider">
                             <Flame className="w-4 h-4 text-amber-400" />
-                            <span>5. Pesan Motivasi & Edukasi untuk Atlet</span>
+                            <span>6. Pesan Motivasi & Edukasi untuk Atlet</span>
                           </div>
                           <p className="text-xs sm:text-sm text-cyan-100 italic leading-relaxed mt-2">
                             "{pembahasanAI.pesanMotivasi}"
@@ -713,6 +840,95 @@ Disusun oleh Swim Time Tracker AI System`;
                           <span className="text-cyan-400 font-semibold font-mono">Target: {recommendation.targetWaktu}</span>
                         </div>
                       </div>
+                    </div>
+
+                    {/* 7. KONSULTASI INTERAKTIF: TANYA AI SEPUTAR PROGRAM RENANG INI */}
+                    <div className="p-5 bg-gradient-to-br from-slate-900 via-sky-950/70 to-slate-900 rounded-2xl border-2 border-cyan-500/50 space-y-4 shadow-xl">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center border border-cyan-500/30">
+                            <Bot className="w-5 h-5 text-cyan-300" />
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-extrabold text-white flex items-center gap-2">
+                              Tanya AI Seputar Program Ini
+                              <span className="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded font-mono font-normal">Gemini 3.8 Flash</span>
+                            </h4>
+                            <p className="text-[11px] text-slate-400">
+                              Konsultasikan pacing, drill teknik, penyesuaian beban jika lelah, atau pertanyaan orang tua atlet.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Quick Prompt Chips */}
+                      <div className="flex flex-wrap gap-1.5">
+                        <span className="text-[11px] text-slate-400 self-center mr-1">Tanya Cepat:</span>
+                        {[
+                          `Bagaimana strategi pacing 50m/100m untuk ${selectedAtlet}?`,
+                          `Apa yang harus dilakukan jika atlet tampak lelah di set ke-4?`,
+                          `Bagaimana drill terbaik untuk high elbow catch gaya ${gaya}?`,
+                          `Berapa stroke rate ideal untuk target ${recommendation.targetWaktu}?`
+                        ].map((chip, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => {
+                              setPertanyaanAI(chip);
+                              handleAskAI(chip);
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-cyan-300 text-[11px] border border-slate-700 transition-all text-left"
+                          >
+                            💬 {chip}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Input form */}
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={pertanyaanAI}
+                          onChange={e => setPertanyaanAI(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAskAI();
+                            }
+                          }}
+                          placeholder={`Ketik pertanyaan Anda seputar program ${selectedAtlet}...`}
+                          className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-cyan-400 focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleAskAI()}
+                          disabled={isLoadingTanya || !pertanyaanAI.trim()}
+                          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-md shadow-cyan-600/30 transition-all disabled:opacity-50 shrink-0"
+                        >
+                          {isLoadingTanya ? (
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Send className="w-3.5 h-3.5" />
+                          )}
+                          <span>{isLoadingTanya ? 'Menjawab...' : 'Tanya AI'}</span>
+                        </button>
+                      </div>
+
+                      {/* AI Answer Display */}
+                      {jawabanAI && (
+                        <div className="p-4 bg-slate-950/90 rounded-xl border border-cyan-500/40 text-xs text-slate-200 leading-relaxed space-y-2">
+                          <div className="flex items-center justify-between text-cyan-400 font-bold border-b border-slate-800 pb-2">
+                            <span className="flex items-center gap-1.5">
+                              <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
+                              Jawaban Konsultan Pelatih Renang AI:
+                            </span>
+                            <span className="text-[10px] text-slate-500 font-mono">World Aquatics Standard</span>
+                          </div>
+                          <div className="whitespace-pre-line text-slate-300 pt-1">
+                            {jawabanAI}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : (

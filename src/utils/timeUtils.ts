@@ -43,12 +43,138 @@ export const formatSecondsToTime = secondsToTimeString;
 export const parseTimeToSeconds = timeStringToSeconds;
 
 /**
- * Validates and formats user input into MM:SS.hh pattern
+ * Automatically formats time input as the user types digits.
+ * Otomatis menyisipkan tanda titik dua (:) dan koma/titik (.) saat mengetik angka.
+ * Mendukung input koma (,) dan titik (.) serta angka murni tanpa simbol.
+ * Contoh:
+ * - "003542" -> "00:35.42"
+ * - "3542"   -> "00:35.42"
+ * - "35,42"  -> "00:35.42"
+ * - "011230" -> "01:12.30"
  */
-export function sanitizeTimeInput(input: string): string {
-  // strip unwanted characters except numbers, colons, and periods
-  const sanitized = input.replace(/[^0-9:.]/g, '');
-  return sanitized;
+export function autoFormatTimeInput(raw: string, prev: string = ''): string {
+  if (!raw) return '';
+
+  // Standarisasi koma (,) menjadi titik (.)
+  let input = raw.replace(/,/g, '.');
+
+  // Jika pengguna sedang menekan Backspace (menghapus karakter), jangan paksa auto-insert
+  if (prev && input.length < prev.length) {
+    return input.replace(/[^0-9:.]/g, '');
+  }
+
+  // Buang karakter yang tidak diizinkan
+  input = input.replace(/[^0-9:.]/g, '');
+
+  // KASUS 1: Mengandung titik dua (:)
+  if (input.includes(':')) {
+    const parts = input.split(':');
+    const mm = parts[0].slice(0, 2);
+    const rest = parts.slice(1).join(':');
+
+    if (rest === '') {
+      return `${mm}:`;
+    }
+
+    if (rest.includes('.')) {
+      const secParts = rest.split('.');
+      const ss = secParts[0].slice(0, 2);
+      const hh = secParts.slice(1).join('').slice(0, 2);
+      return `${mm}:${ss}.${hh}`;
+    }
+
+    // Bagian detik belum ada titik
+    if (rest.length > 2) {
+      const ss = rest.slice(0, 2);
+      const hh = rest.slice(2, 4);
+      return `${mm}:${ss}.${hh}`;
+    } else if (rest.length === 2 && !input.endsWith(':')) {
+      return `${mm}:${rest}.`;
+    }
+
+    return `${mm}:${rest}`;
+  }
+
+  // KASUS 2: Mengandung titik (.) atau koma yang diubah
+  if (input.includes('.')) {
+    const [secPart, hundredthPart] = input.split('.');
+    const cleanSec = secPart || '00';
+    const cleanHund = (hundredthPart || '').slice(0, 2);
+
+    if (cleanSec.length <= 2) {
+      const ss = cleanSec.padStart(2, '0');
+      return `00:${ss}.${cleanHund}`;
+    } else {
+      const mm = cleanSec.slice(0, cleanSec.length - 2).padStart(2, '0');
+      const ss = cleanSec.slice(-2);
+      return `${mm}:${ss}.${cleanHund}`;
+    }
+  }
+
+  // KASUS 3: Pengguna hanya mengetik digit angka murni
+  const digits = input.replace(/\D/g, '');
+  if (!digits) return '';
+
+  if (digits.length <= 2) {
+    // 1-2 digit: misal "0", "00", atau "35"
+    if (digits === '00') {
+      return '00:';
+    }
+    return digits;
+  }
+
+  if (digits.length === 3) {
+    // misal "003" -> "00:3" atau "354" -> "00:35.4"
+    if (digits.startsWith('00')) {
+      return `00:${digits.slice(2)}`;
+    }
+    return `00:${digits.slice(0, 2)}.${digits.slice(2)}`;
+  }
+
+  if (digits.length === 4) {
+    // misal "3542" -> "00:35.42"
+    // misal "0035" -> "00:35."
+    if (digits.startsWith('00')) {
+      return `00:${digits.slice(2, 4)}.`;
+    }
+    return `00:${digits.slice(0, 2)}.${digits.slice(2, 4)}`;
+  }
+
+  if (digits.length === 5) {
+    // misal "00354" -> "00:35.4"
+    // misal "11230" -> 1 menit 12.30 detik -> "01:12.30"
+    if (digits.startsWith('00')) {
+      return `00:${digits.slice(2, 4)}.${digits.slice(4)}`;
+    }
+    return `0${digits.slice(0, 1)}:${digits.slice(1, 3)}.${digits.slice(3, 5)}`;
+  }
+
+  if (digits.length >= 6) {
+    // misal "003542" -> "00:35.42"
+    // misal "011230" -> "01:12.30"
+    return `${digits.slice(0, 2)}:${digits.slice(2, 4)}.${digits.slice(4, 6)}`;
+  }
+
+  return input;
+}
+
+/**
+ * Normalisasi format waktu menjadi MM:SS.hh sempurna saat blur / submit
+ */
+export function normalizeSwimTime(val: string): string {
+  if (!val) return '';
+  const seconds = timeStringToSeconds(val);
+  if (seconds > 0) {
+    return secondsToTimeString(seconds);
+  }
+  return val;
+}
+
+/**
+ * Validates and sanitizes user input into MM:SS.hh pattern
+ */
+export function sanitizeTimeInput(input: string, prev?: string): string {
+  return autoFormatTimeInput(input, prev);
 }
 
 /**

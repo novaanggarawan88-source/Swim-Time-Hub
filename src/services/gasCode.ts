@@ -856,6 +856,42 @@ function formatTime(sec) {
   return String(m).padStart(2,'0') + ':' + String(wholeS).padStart(2,'0') + '.' + String(h >= 100 ? 99 : h).padStart(2,'0');
 }
 
+function autoFormatGasTime(el) {
+  let val = el.value.replace(/,/g, '.').replace(/[^0-9:.]/g, '');
+  if (!val) return;
+  if (val.includes(':')) {
+    let parts = val.split(':');
+    let m = parts[0].slice(0, 2);
+    let rest = parts.slice(1).join('');
+    if (rest.includes('.')) {
+      let [s, h] = rest.split('.');
+      el.value = m + ':' + s.slice(0, 2) + '.' + h.slice(0, 2);
+    } else if (rest.length >= 2) {
+      el.value = m + ':' + rest.slice(0, 2) + '.' + rest.slice(2, 4);
+    } else {
+      el.value = m + ':' + rest;
+    }
+    return;
+  }
+  if (val.includes('.')) {
+    let [sec, hund] = val.split('.');
+    let s = sec.slice(0, 2).padStart(2, '0');
+    el.value = '00:' + s + '.' + hund.slice(0, 2);
+    return;
+  }
+  let digits = val.replace(/\D/g, '');
+  if (digits.length === 2 && digits === '00') {
+    el.value = '00:';
+  } else if (digits.length === 3) {
+    if (digits.startsWith('00')) el.value = '00:' + digits.slice(2);
+    else el.value = '00:' + digits.slice(0, 2) + '.' + digits.slice(2);
+  } else if (digits.length === 4) {
+    el.value = '00:' + digits.slice(0, 2) + '.' + digits.slice(2, 4);
+  } else if (digits.length >= 5) {
+    el.value = digits.slice(0, 2) + ':' + digits.slice(2, 4) + '.' + digits.slice(4, 6);
+  }
+}
+
 function renderDashboard(container) {
   const totalAtlet = athletesList.length;
   const totalLomba = competitionsList.length;
@@ -1028,8 +1064,8 @@ function renderCatatWaktuView(container) {
         </div>
         <div class="mb-3">
           <label class="form-label">Waktu (Format MM:SS.hh)</label>
-          <input type="text" id="wktWaktu" class="form-control form-control-lg font-monospace text-warning fw-bold fs-3 text-center" placeholder="00:35.42" required>
-          <small class="text-muted">Contoh: 00:35.42 (Otomatis dikonversi ke detik)</small>
+          <input type="text" id="wktWaktu" inputmode="decimal" class="form-control form-control-lg font-monospace text-warning fw-bold fs-3 text-center" placeholder="00:35.42" oninput="autoFormatGasTime(this)" required>
+          <small class="text-info d-block mt-1">✨ Otomatis menyisipkan tanda titik dua (:) dan koma/titik (.) saat mengetik angka.</small>
         </div>
         <div class="mb-3">
           <label class="form-label">Catatan Tambahan</label>

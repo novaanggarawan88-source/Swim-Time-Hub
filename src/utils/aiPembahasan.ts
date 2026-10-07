@@ -35,6 +35,7 @@ export async function fetchAIPembahasan(params: RequestPembahasanParams): Promis
         return {
           ringkasanStrategi: d.ringkasanStrategi || 'Program latihan dirancang untuk mengoptimalkan potensi atlet.',
           analisisFisiologi: d.analisisFisiologi || 'Fokus pada sistem energi aerobik dan anaerobik sesuai jarak lomba.',
+          bedahSesiHarian: Array.isArray(d.bedahSesiHarian) ? d.bedahSesiHarian : undefined,
           petunjukTepiKolam: Array.isArray(d.petunjukTepiKolam)
             ? d.petunjukTepiKolam
             : [d.petunjukTepiKolam || 'Perhatikan streamline dan efisiensi kayuhan.'],
@@ -121,11 +122,48 @@ function generateExpertCoachingBreakdown(params: RequestPembahasanParams): AIPem
     pesanMotivasi = `Istirahat yang cerdas adalah bagian penting dari latihan juara dunia. Beri tubuh waktu beradaptasi, dan kamu akan kembali jauh lebih kuat!`;
   }
 
+  // Construct intelligent per-session breakdown
+  const bedahSesiHarian = (params.items || []).map((item, index) => {
+    return {
+      sesi: item.hari || `Sesi ${index + 1}`,
+      fokus: item.fokusLatihan,
+      target: item.targetWaktu,
+      penjelasan: `Set ${item.set} x ${item.repetisi} pada fokus ${item.fokusLatihan} dengan istirahat ${item.istirahat} dirancang untuk adaptasi ${item.intensitas.toLowerCase()}. Manfaatnya melatih memori otot dan konsistensi kecepatan lomba.`,
+      tipsKunci: item.catatan || item.tujuan || `Jaga ritme kayuhan stabil dan pernapasan terkontrol.`
+    };
+  });
+
   return {
     ringkasanStrategi,
     analisisFisiologi,
+    bedahSesiHarian,
     petunjukTepiKolam,
     panduanPemulihan,
     pesanMotivasi
   };
+}
+
+/**
+ * Ask Gemini AI any question about the swimming program or coaching
+ */
+export async function askAIKonsultasi(pertanyaan: string, konteks: any): Promise<string> {
+  try {
+    const res = await fetch('/api/ai/konsultasi', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pertanyaan, konteks }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.jawaban) {
+        return data.jawaban;
+      }
+    }
+  } catch (err) {
+    console.warn('Gagal memanggil API konsultasi AI:', err);
+  }
+
+  // Fallback answer based on coaching best practices
+  return `Sebagai prinsip kepelatihan: Pada program nomor ${konteks?.gaya || 'renang'} jarak ${konteks?.jarak || ''}, pastikan atlet tidak mengorbankan teknik (streamline & high-elbow catch) demi memaksakan kecepatan saat kelelahan. Jika atlet tampak over-fatigued, perpanjang waktu istirahat antar set sebesar 15-30 detik atau berikan renang santai (easy swim) 100m sebelum melanjutkan.`;
 }

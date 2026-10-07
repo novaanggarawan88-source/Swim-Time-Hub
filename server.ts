@@ -54,7 +54,7 @@ app.post('/api/ai/pembahasan-program', async (req, res) => {
     }
 
     const prompt = `Anda adalah Kepala Pelatih Renang Internasional (World Aquatics / ASCA Level 5) dan Pakar Fisiologi Olahraga Akuatik.
-Tugas Anda adalah membuat PEMBAHASAN PROGRAM LATIHAN yang sangat komprehensif, terstruktur, mendalam, namun mudah dipahami oleh pelatih di tepi kolam, atlet renang, maupun orang tua atlet.
+Tugas Anda adalah membuat PEMBAHASAN PROGRAM LATIHAN RENANG yang sangat komprehensif, terstruktur, ilmiah namun MUDAT DIPAHAMI oleh pelatih di tepi kolam, atlet renang (anak-anak/remaja/senior), maupun orang tua atlet.
 
 PROFIL ATLET & REKOR:
 - Nama Atlet: ${atlet || 'Atlet'}
@@ -70,8 +70,17 @@ ${(items || []).map((it: any, i: number) => `Sesi ${i + 1} (${it.hari || 'Hari '
 
 Format keluaran WAJIB berupa JSON murni dengan struktur berikut:
 {
-  "ringkasanStrategi": "Penjelasan mendalam mengapa program ini dirancang seperti ini berdasarkan perbandingan waktu terakhir atlet dengan PB dan target waktu. Bahasa jelas, profesional, dan meyakinkan.",
-  "analisisFisiologi": "Penjelasan sistem energi utama yang dilatih (ATP-CP, glikolitik asam laktat, atau kapasitas aerobik), adaptasi pembuangan asam laktat (lactate clearance), dan rasio waktu kerja berbanding istirahat (work-to-rest ratio).",
+  "ringkasanStrategi": "Penjelasan mendalam mengapa program ini dirancang seperti ini berdasarkan perbandingan waktu terakhir atlet dengan PB dan target waktu. Bahasa jelas, mendidik, profesional, dan meyakinkan.",
+  "analisisFisiologi": "Penjelasan sistem energi utama yang dilatih (ATP-CP, glikolitik asam laktat, atau kapasitas aerobik), adaptasi pembuangan asam laktat (lactate clearance), dan rasio waktu kerja berbanding istirahat (work-to-rest ratio) dengan bahasa analogi yang mudah dipahami.",
+  "bedahSesiHarian": [
+    {
+      "sesi": "Nama Hari / Sesi (misal: Senin - Teknik)",
+      "fokus": "Fokus latihan",
+      "target": "Target waktu",
+      "penjelasan": "Alasan kenapa set & repetisi ini diberikan dan manfaat fisiologisnya.",
+      "tipsKunci": "Tips kunci kayuhan atau teknik saat berenang sesi ini"
+    }
+  ],
   "petunjukTepiKolam": [
     "Instruksi teknis praktis #1 (misal: posisi kepala, catch siku tinggi / high elbow catch)",
     "Instruksi teknis praktis #2 (misal: tolakan dinding pembalikan / turn dan underwater dolphin kick)",
@@ -109,6 +118,46 @@ Format keluaran WAJIB berupa JSON murni dengan struktur berikut:
     return res.status(200).json({
       success: false,
       error: error.message || 'Gagal memanggil Gemini AI'
+    });
+  }
+});
+
+// API Route: Coach Q&A / Konsultasi AI Program Renang
+app.post('/api/ai/konsultasi', async (req, res) => {
+  try {
+    const { pertanyaan, konteks } = req.body;
+    if (!ai) {
+      return res.status(200).json({
+        success: false,
+        error: 'GEMINI_API_KEY belum dikonfigurasi.'
+      });
+    }
+
+    const prompt = `Anda adalah Asisten AI Pelatih Renang Internasional (World Aquatics).
+Jawab pertanyaan pelatih atau orang tua atlet berikut dengan ramah, profesional, praktis, dan mudah dipahami.
+
+KONTEKS ATLET & PROGRAM:
+${JSON.stringify(konteks || {}, null, 2)}
+
+PERTANYAAN:
+"${pertanyaan}"
+
+Berikan jawaban terstruktur dalam bahasa Indonesia yang ringkas (2-3 paragraf), aplikatif untuk di tepi kolam renang, dan memberikan solusi konkret.`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.8-flash',
+      contents: prompt,
+    });
+
+    return res.json({
+      success: true,
+      jawaban: response.text || 'Tidak ada tanggapan dari AI.'
+    });
+  } catch (error: any) {
+    console.error('Gemini Q&A Error:', error);
+    return res.status(200).json({
+      success: false,
+      error: error.message || 'Gagal memproses pertanyaan dengan AI'
     });
   }
 });
