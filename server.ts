@@ -21,8 +21,8 @@ const DATA_STORE_PATH = path.resolve(__dirname, 'data_store.json');
 const DEFAULT_STORE = {
   lastUpdated: new Date().toISOString(),
   config: {
-    webAppUrl: '',
-    spreadsheetId: '',
+    webAppUrl: 'https://script.google.com/macros/s/AKfycbysRKWrUAYAzjnj3kc7OXHdfVaHioXO1G_aZ8Aan-mVuduGo_S4hiNDG0hFT_hVhZTSAg/exec',
+    spreadsheetId: '1LzIYYbpT5wEuCwW1nmaC1ZZyuPeQBjUowEorTS6W0jc',
     autoSync: true,
     lastSync: ''
   },

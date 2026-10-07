@@ -1,8 +1,8 @@
 {
   "lastUpdated": "2026-10-07T23:02:04.193Z",
   "config": {
-    "webAppUrl": "",
-    "spreadsheetId": "",
+    "webAppUrl": "https://script.google.com/macros/s/AKfycbysRKWrUAYAzjnj3kc7OXHdfVaHioXO1G_aZ8Aan-mVuduGo_S4hiNDG0hFT_hVhZTSAg/exec",
+    "spreadsheetId": "1LzIYYbpT5wEuCwW1nmaC1ZZyuPeQBjUowEorTS6W0jc",
     "autoSync": true,
     "lastSync": ""
   },

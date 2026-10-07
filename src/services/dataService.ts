@@ -426,19 +426,27 @@ export class SwimDataService {
   }
 
   // GOOGLE SPREADSHEET CONFIG
+  static readonly DEFAULT_CONFIG: GoogleSheetsConfig = {
+    webAppUrl: 'https://script.google.com/macros/s/AKfycbysRKWrUAYAzjnj3kc7OXHdfVaHioXO1G_aZ8Aan-mVuduGo_S4hiNDG0hFT_hVhZTSAg/exec',
+    spreadsheetId: '1LzIYYbpT5wEuCwW1nmaC1ZZyuPeQBjUowEorTS6W0jc',
+    autoSync: true
+  };
+
   static getConfig(): GoogleSheetsConfig {
     const raw = localStorage.getItem(STORAGE_KEYS.GAS_CONFIG);
     if (!raw) {
-      return {
-        webAppUrl: '',
-        spreadsheetId: '',
-        autoSync: true
-      };
+      return { ...this.DEFAULT_CONFIG };
     }
     try {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      return {
+        webAppUrl: parsed.webAppUrl || this.DEFAULT_CONFIG.webAppUrl,
+        spreadsheetId: parsed.spreadsheetId || this.DEFAULT_CONFIG.spreadsheetId,
+        autoSync: parsed.autoSync !== undefined ? parsed.autoSync : true,
+        lastSync: parsed.lastSync
+      };
     } catch {
-      return { webAppUrl: '', spreadsheetId: '', autoSync: true };
+      return { ...this.DEFAULT_CONFIG };
     }
   }
 
