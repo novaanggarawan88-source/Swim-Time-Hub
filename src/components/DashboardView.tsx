@@ -39,18 +39,25 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     <div className="space-y-6">
       {/* Top Banner with Quick Actions */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-sky-900 via-cyan-900 to-blue-900 border border-cyan-500/30 p-5 sm:p-7 shadow-2xl">
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-semibold mb-2 border border-cyan-400/30">
-              <Sparkles className="w-3.5 h-3.5" />
-              Sistem Pelatih Renang Terpadu
+        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+          <div className="flex items-center gap-4">
+            <img
+              src="/logo.png"
+              alt="Garuda Swimming Club Buleleng"
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-contain bg-slate-950/80 p-1 border-2 border-amber-400/60 shadow-2xl shadow-amber-500/30 shrink-0"
+            />
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold mb-1.5 border border-amber-400/40">
+                <Sparkles className="w-3.5 h-3.5" />
+                GARUDA SWIMMING CLUB BULELENG
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                SWIM TIME TRACKER
+              </h1>
+              <p className="text-xs sm:text-sm text-cyan-100/90 mt-1 max-w-xl">
+                Aplikasi pencatat waktu latihan & kejuaraan lomba renang, pemantauan rekor Personal Best (PB), dan rekomendasi program latihan berbasis AI & Google Spreadsheet.
+              </p>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              SWIM TIME TRACKER
-            </h1>
-            <p className="text-sm sm:text-base text-cyan-100/90 mt-1 max-w-xl">
-              Pencatat waktu latihan & lomba di tepi kolam, pemantauan rekor Personal Best (PB), dan generator rekomendasi program latihan terintegrasi Google Spreadsheet.
-            </p>
           </div>
 
           {/* Big Poolside Action Buttons */}

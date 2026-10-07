@@ -1,0 +1,32 @@
+{
+  "id": "/",
+  "name": "GARUDA SWIMMING CLUB - Swim Time Tracker",
+  "short_name": "Garuda SC",
+  "description": "Aplikasi pencatat waktu renang, personal best, dan program latihan resmi Garuda Swimming Club Buleleng.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#0284c7",
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

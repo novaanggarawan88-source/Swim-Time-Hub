@@ -653,8 +653,8 @@ export const INDEX_HTML = `<!DOCTYPE html>
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary-gradient shadow-sm sticky-top">
     <div class="container-fluid px-3">
       <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="#">
-        <i class="fa-solid fa-person-swimming fs-3 text-cyan"></i>
-        <span>SWIM TIME TRACKER</span>
+        <img src="https://ais-pre-j33sm2jrlvieuav4lrvi6r-570564710393.asia-east1.run.app/logo.png" style="width:36px;height:36px;border-radius:8px;object-fit:contain;background:#0f172a;padding:2px;border:1px solid #f59e0b;" alt="Garuda Logo" onerror="this.style.display='none'">
+        <span>GARUDA SWIMMING CLUB</span>
       </a>
       <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
         <span class="navbar-toggler-icon"></span>

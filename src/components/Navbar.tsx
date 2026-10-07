@@ -8,10 +8,10 @@ import {
   History, 
   LayoutDashboard, 
   FileSpreadsheet,
-  Waves,
   Menu,
   X
 } from 'lucide-react';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface NavbarProps {
   currentTab: string;
@@ -51,15 +51,19 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center justify-between h-16">
           {/* Logo & Title */}
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => onSelectTab('dashboard')}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-500 flex items-center justify-center shadow-md shadow-cyan-500/30 text-white">
-              <Waves className="w-6 h-6 animate-pulse" />
+            <div className="relative w-11 h-11 rounded-xl bg-slate-950 border border-amber-500/50 shadow-md shadow-amber-500/20 overflow-hidden shrink-0 flex items-center justify-center p-0.5">
+              <img
+                src="/logo.png"
+                alt="Garuda Swimming Club Buleleng"
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
-              <span className="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-cyan-400 via-sky-300 to-blue-200 bg-clip-text text-transparent">
-                SWIM TIME TRACKER
+              <span className="font-black text-base sm:text-lg tracking-tight bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 bg-clip-text text-transparent block leading-tight">
+                GARUDA SWIMMING CLUB
               </span>
-              <span className="block text-[10px] text-cyan-400/80 font-medium tracking-wider uppercase">
-                Poolside Timing & Training System
+              <span className="block text-[10px] text-cyan-300/90 font-bold tracking-wider uppercase">
+                SWIM TIME TRACKER • BULELENG
               </span>
             </div>
           </div>
@@ -86,8 +90,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             })}
           </nav>
 
-          {/* Right Action Tools: Stopwatch & Google Sheets Manager */}
+          {/* Right Action Tools: PWA Install, Stopwatch & Google Sheets Manager */}
           <div className="flex items-center gap-2">
+            {/* In-App Install Prompt with Logo */}
+            <PWAInstallButton />
+
             {/* Quick Stopwatch Poolside Floating Button */}
             <button
               onClick={openStopwatchModal}
@@ -95,7 +102,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-400 text-xs sm:text-sm font-bold transition-all shadow-sm active:scale-95"
             >
               <Timer className="w-4 h-4" />
-              <span className="hidden sm:inline">Stopwatch Kolam</span>
+              <span className="hidden sm:inline">Stopwatch</span>
             </button>
 
             {/* Google Sheets Status / Manager */}
