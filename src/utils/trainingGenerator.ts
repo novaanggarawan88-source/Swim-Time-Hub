@@ -1,4 +1,4 @@
-import { CatatanWaktu, GayaRenang, JarakRenang, ProgramLatihanItem } from '../types/swim';
+import { CatatanWaktu, GayaRenang, JarakRenang, ProgramLatihanItem, AIPembahasanOutput } from '../types/swim';
 import { computePBForEvent, formatSecondsToTime, timeStringToSeconds } from './timeUtils';
 
 export interface TrainingRecommendationOutput {
@@ -14,6 +14,7 @@ export interface TrainingRecommendationOutput {
   targetWaktu: string;
   targetDetik: number;
   items: ProgramLatihanItem[];
+  pembahasanAI?: AIPembahasanOutput;
 }
 
 export function generateTrainingProgram(

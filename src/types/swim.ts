@@ -74,6 +74,14 @@ export interface PersonalBestInfo {
   history: CatatanWaktu[];
 }
 
+export interface AIPembahasanOutput {
+  ringkasanStrategi: string;
+  analisisFisiologi: string;
+  petunjukTepiKolam: string[];
+  panduanPemulihan: string;
+  pesanMotivasi: string;
+}
+
 export interface GoogleSheetsConfig {
   webAppUrl: string;
   spreadsheetId: string;

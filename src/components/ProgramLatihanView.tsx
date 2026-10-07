@@ -4,10 +4,12 @@ import {
   CatatanWaktu, 
   GayaRenang, 
   JarakRenang, 
-  ProgramLatihanItem 
+  ProgramLatihanItem,
+  AIPembahasanOutput
 } from '../types/swim';
 import { computePBForEvent, formatSecondsToTime, secondsToTimeString, sanitizeTimeInput } from '../utils/timeUtils';
 import { generateTrainingProgram, TrainingRecommendationOutput } from '../utils/trainingGenerator';
+import { fetchAIPembahasan } from '../utils/aiPembahasan';
 import Swal from 'sweetalert2';
 import { 
   ClipboardList, 
@@ -23,7 +25,16 @@ import {
   AlertCircle,
   Plus,
   Trash2,
-  ListOrdered
+  ListOrdered,
+  Bot,
+  Brain,
+  Zap,
+  Check,
+  Copy,
+  RefreshCw,
+  Flame,
+  HeartPulse,
+  BookOpen
 } from 'lucide-react';
 
 interface ProgramLatihanViewProps {
@@ -51,6 +62,9 @@ export const ProgramLatihanView: React.FC<ProgramLatihanViewProps> = ({
   // Generated Plan State
   const [recommendation, setRecommendation] = useState<TrainingRecommendationOutput | null>(null);
   const [editableRows, setEditableRows] = useState<ProgramLatihanItem[]>([]);
+  const [pembahasanAI, setPembahasanAI] = useState<AIPembahasanOutput | null>(null);
+  const [isLoadingAI, setIsLoadingAI] = useState<boolean>(false);
+  const [isCopiedAI, setIsCopiedAI] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'generator' | 'riwayat'>('generator');
 
   // When Swimmer or Event changes, recalculate default target
@@ -67,7 +81,7 @@ export const ProgramLatihanView: React.FC<ProgramLatihanViewProps> = ({
     }
   }, [selectedAtlet, gaya, jarak, records]);
 
-  const handleGenerate = (e: React.FormEvent) => {
+  const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAtlet) return;
 
@@ -83,17 +97,118 @@ export const ProgramLatihanView: React.FC<ProgramLatihanViewProps> = ({
     setRecommendation(result);
     setEditableRows([...result.items]);
 
+    // Automatically trigger AI Coaching Breakdown
+    setIsLoadingAI(true);
+    setPembahasanAI(null);
+
+    try {
+      const aiResult = await fetchAIPembahasan({
+        atlet: selectedAtlet,
+        gaya,
+        jarak,
+        pbWaktu: result.pbWaktu,
+        pbDetik: result.pbDetik,
+        waktuTerakhir: result.waktuTerakhir,
+        waktuTerakhirDetik: result.waktuTerakhirDetik,
+        targetWaktu: result.targetWaktu,
+        targetDetik: result.targetDetik,
+        lamaMinggu,
+        statusKondisi: result.statusKondisi,
+        statusLabel: result.statusLabel,
+        items: result.items
+      });
+      setPembahasanAI(aiResult);
+    } catch (err) {
+      console.warn('Gagal memuat pembahasan AI:', err);
+    } finally {
+      setIsLoadingAI(false);
+    }
+
     Swal.fire({
       icon: 'success',
-      title: 'Rekomendasi Dibuat!',
+      title: 'Program & Pembahasan AI Siap!',
       html: `
         <div style="font-size: 14px;">
           Program latihan <b>${lamaMinggu} Minggu</b> untuk <b>${selectedAtlet}</b> (${gaya} ${jarak}) berhasil dirancang.<br>
           <span style="color: #38bdf8;">Status: ${result.statusLabel}</span><br>
-          <small style="color: #94a3b8; margin-top: 6px; display: block;">Pelatih dapat mengubah set, repetisi, target waktu, dan istirahat di tabel sebelum menyimpan.</small>
+          <small style="color: #94a3b8; margin-top: 6px; display: block;">Pembahasan berbasis AI & sains renang telah disertakan di bawah tabel latihan.</small>
         </div>
       `,
       timer: 2500,
+      showConfirmButton: false,
+      background: '#0f172a',
+      color: '#f8fafc'
+    });
+  };
+
+  const handleRefreshAI = async () => {
+    if (!recommendation) return;
+    setIsLoadingAI(true);
+    try {
+      const aiResult = await fetchAIPembahasan({
+        atlet: selectedAtlet,
+        gaya,
+        jarak,
+        pbWaktu: recommendation.pbWaktu,
+        pbDetik: recommendation.pbDetik,
+        waktuTerakhir: recommendation.waktuTerakhir,
+        waktuTerakhirDetik: recommendation.waktuTerakhirDetik,
+        targetWaktu: recommendation.targetWaktu,
+        targetDetik: recommendation.targetDetik,
+        lamaMinggu,
+        statusKondisi: recommendation.statusKondisi,
+        statusLabel: recommendation.statusLabel,
+        items: editableRows
+      });
+      setPembahasanAI(aiResult);
+      Swal.fire({
+        icon: 'success',
+        title: 'Pembahasan AI Diperbarui!',
+        timer: 1500,
+        showConfirmButton: false,
+        background: '#0f172a',
+        color: '#f8fafc'
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoadingAI(false);
+    }
+  };
+
+  const handleCopyAIText = () => {
+    if (!pembahasanAI || !recommendation) return;
+    const text = `📋 PEMBAHASAN PROGRAM LATIHAN RENANG (AI COACHING INSIGHT)
+Atlet: ${selectedAtlet}
+Nomor: Gaya ${gaya} ${jarak}
+Target Waktu: ${recommendation.targetWaktu} (PB Saat Ini: ${recommendation.pbWaktu})
+Status Performa: ${recommendation.statusLabel}
+
+1. RINGKASAN STRATEGI & PERIODISASI:
+${pembahasanAI.ringkasanStrategi}
+
+2. ANALISIS FISIOLOGI & SISTEM ENERGI:
+${pembahasanAI.analisisFisiologi}
+
+3. PETUNJUK TEKNIS DI PINGGIR KOLAM (COACHING CUES):
+${pembahasanAI.petunjukTepiKolam.map((c, i) => `${i + 1}. ${c}`).join('\n')}
+
+4. PANDUAN PEMULIHAN & NUTRISI:
+${pembahasanAI.panduanPemulihan}
+
+5. PESAN MOTIVASI ATLET:
+"${pembahasanAI.pesanMotivasi}"
+
+Disusun oleh Swim Time Tracker AI System`;
+
+    navigator.clipboard.writeText(text);
+    setIsCopiedAI(true);
+    setTimeout(() => setIsCopiedAI(false), 2000);
+    Swal.fire({
+      icon: 'success',
+      title: 'Tersalin ke Clipboard!',
+      text: 'Pembahasan program siap dibagikan ke WhatsApp atlet atau orang tua.',
+      timer: 1800,
       showConfirmButton: false,
       background: '#0f172a',
       color: '#f8fafc'
@@ -153,10 +268,10 @@ export const ProgramLatihanView: React.FC<ProgramLatihanViewProps> = ({
         <div>
           <h1 className="text-2xl font-extrabold text-white flex items-center gap-2.5">
             <ClipboardList className="w-7 h-7 text-cyan-400" />
-            Program Latihan Otomatis
+            Program Latihan Otomatis & Analisis AI
           </h1>
           <p className="text-sm text-slate-400 mt-0.5">
-            Analisis catatan waktu dan Personal Best (PB) untuk membuat rekomendasi periodisasi latihan yang dapat disesuaikan pelatih.
+            Rekomendasi periodisasi latihan lengkap dengan pembahasan mendalam berbasis Gemini AI agar mudah dipahami pelatih, atlet, dan orang tua.
           </p>
         </div>
 
@@ -169,7 +284,7 @@ export const ProgramLatihanView: React.FC<ProgramLatihanViewProps> = ({
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            Generator Rekomendasi
+            Generator & AI
           </button>
           <button
             onClick={() => setActiveTab('riwayat')}
@@ -310,23 +425,24 @@ export const ProgramLatihanView: React.FC<ProgramLatihanViewProps> = ({
               <div className="flex justify-end">
                 <button
                   type="submit"
-                  className="flex items-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm sm:text-base shadow-lg shadow-cyan-500/25 active:scale-95 transition-all"
+                  disabled={isLoadingAI}
+                  className="flex items-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm sm:text-base shadow-lg shadow-cyan-500/25 active:scale-95 transition-all disabled:opacity-50"
                 >
-                  <Sparkles className="w-5 h-5" />
-                  <span>BUAT REKOMENDASI PROGRAM LATIHAN</span>
+                  <Sparkles className="w-5 h-5 text-yellow-300" />
+                  <span>BUAT PROGRAM & PEMBAHASAN LENGKAP DENGAN AI</span>
                 </button>
               </div>
             </form>
           </div>
 
-          {/* Result: Recommendation Plan */}
+          {/* Result: Recommendation Plan & AI Coaching Breakdown */}
           {recommendation && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Coach Advisory Banner */}
               <div className="bg-gradient-to-r from-slate-900 via-sky-950 to-slate-900 border border-cyan-500/40 rounded-2xl p-5 shadow-xl">
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div>
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
                         {recommendation.statusLabel}
                       </span>
@@ -335,10 +451,7 @@ export const ProgramLatihanView: React.FC<ProgramLatihanViewProps> = ({
                       </span>
                     </div>
                     <p className="text-sm text-slate-200 mt-2 leading-relaxed">
-                      💡 <b>Analisis Pelatih:</b> {recommendation.penjelasanPelatih}
-                    </p>
-                    <p className="text-[11px] text-slate-400 mt-1 italic">
-                      * Program ini berupa rekomendasi pelatih. Anda bebas menyunting angka set, repetisi, target waktu, dan intensitas di tabel di bawah sebelum menyetujui & menyimpan.
+                      💡 <b>Logika Pelatih:</b> {recommendation.penjelasanPelatih}
                     </p>
                   </div>
 
@@ -346,7 +459,7 @@ export const ProgramLatihanView: React.FC<ProgramLatihanViewProps> = ({
                     <button
                       onClick={handlePrint}
                       className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
-                      title="Cetak Program (Print)"
+                      title="Cetak Program & Pembahasan (Print)"
                     >
                       <Printer className="w-4 h-4" />
                     </button>
@@ -369,7 +482,7 @@ export const ProgramLatihanView: React.FC<ProgramLatihanViewProps> = ({
                     Jadwal Sesi Latihan ({editableRows.length} Sesi)
                   </h3>
                   <span className="text-xs text-slate-400">
-                    Klik teks pada kolom untuk menyunting
+                    Pelatih bebas menyunting angka pada tabel
                   </span>
                 </div>
 
@@ -461,7 +574,7 @@ export const ProgramLatihanView: React.FC<ProgramLatihanViewProps> = ({
 
                 <div className="p-4 bg-slate-900/80 border-t border-slate-700 flex items-center justify-between">
                   <span className="text-xs text-slate-400">
-                    Selesai menyunting? Klik Simpan Program untuk menyimpan ke Google Spreadsheet.
+                    Setelah diedit, simpan program ke Google Spreadsheet
                   </span>
                   <button
                     onClick={handleSaveToSpreadsheet}
@@ -471,6 +584,148 @@ export const ProgramLatihanView: React.FC<ProgramLatihanViewProps> = ({
                     <span>SIMPAN PROGRAM</span>
                   </button>
                 </div>
+              </div>
+
+              {/* SPECIAL SECTION: PEMBAHASAN PROGRAM LATIHAN BERBASIS AI */}
+              <div className="bg-slate-900 border-2 border-cyan-500/40 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-cyan-500/30">
+                      <Brain className="w-6 h-6 animate-pulse text-yellow-300" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
+                          PEMBAHASAN PROGRAM LATIHAN (ANALISIS AI)
+                        </h2>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                          Gemini AI & Swim Science
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Penjelasan ilmiah dan panduan praktis agar program mudah dipahami oleh pelatih, atlet, dan orang tua.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <button
+                      onClick={handleRefreshAI}
+                      disabled={isLoadingAI}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition-all disabled:opacity-50"
+                      title="Minta AI menghasilkan analisis ulang"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${isLoadingAI ? 'animate-spin' : ''}`} />
+                      <span>{isLoadingAI ? 'Menganalisis...' : 'Analisis Ulang AI'}</span>
+                    </button>
+
+                    <button
+                      onClick={handleCopyAIText}
+                      disabled={!pembahasanAI}
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold shadow transition-all active:scale-95 disabled:opacity-50"
+                    >
+                      {isCopiedAI ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{isCopiedAI ? 'Tersalin!' : 'Salin Pembahasan'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {isLoadingAI ? (
+                  <div className="py-12 text-center space-y-3">
+                    <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                    <p className="text-sm font-semibold text-cyan-300">
+                      Gemini AI sedang menganalisis biomekanika kayuhan dan fisiologi energi atlet...
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      Menghubungkan catatan waktu {selectedAtlet} dengan standar periodisasi World Aquatics.
+                    </p>
+                  </div>
+                ) : pembahasanAI ? (
+                  <div className="space-y-5 pt-5">
+                    {/* 1. Ringkasan Strategi & Periodisasi */}
+                    <div className="p-4 sm:p-5 bg-slate-800/80 rounded-2xl border border-cyan-900/50 space-y-2">
+                      <div className="flex items-center gap-2 text-cyan-400 font-extrabold text-sm uppercase tracking-wider">
+                        <TargetIcon className="w-4 h-4" />
+                        <span>1. Mengapa Program Ini Dirancang Seperti Ini? (Strategi Pelatih)</span>
+                      </div>
+                      <p className="text-sm text-slate-200 leading-relaxed">
+                        {pembahasanAI.ringkasanStrategi}
+                      </p>
+                    </div>
+
+                    {/* 2. Bedah Fisiologi & Sistem Energi */}
+                    <div className="p-4 sm:p-5 bg-slate-800/80 rounded-2xl border border-cyan-900/50 space-y-2">
+                      <div className="flex items-center gap-2 text-amber-400 font-extrabold text-sm uppercase tracking-wider">
+                        <Zap className="w-4 h-4" />
+                        <span>2. Bedah Fisiologi, Asam Laktat & Sistem Energi</span>
+                      </div>
+                      <p className="text-sm text-slate-200 leading-relaxed">
+                        {pembahasanAI.analisisFisiologi}
+                      </p>
+                    </div>
+
+                    {/* 3. Petunjuk Teknis di Tepi Kolam (Poolside Coaching Cues) */}
+                    <div className="p-4 sm:p-5 bg-slate-800/80 rounded-2xl border border-cyan-900/50 space-y-3">
+                      <div className="flex items-center gap-2 text-emerald-400 font-extrabold text-sm uppercase tracking-wider">
+                        <EyeIcon className="w-4 h-4" />
+                        <span>3. Petunjuk Praktis di Tepi Kolam (Apa yang Harus Diamati Pelatih)</span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {pembahasanAI.petunjukTepiKolam.map((cue, idx) => (
+                          <div key={idx} className="bg-slate-900/80 p-3.5 rounded-xl border border-slate-700/80 flex items-start gap-2.5">
+                            <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                              {idx + 1}
+                            </span>
+                            <span className="text-xs text-slate-300 leading-normal">
+                              {cue}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 4 & 5: Pemulihan & Motivasi */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Pemulihan */}
+                      <div className="p-4 sm:p-5 bg-slate-800/80 rounded-2xl border border-cyan-900/50 space-y-2">
+                        <div className="flex items-center gap-2 text-rose-400 font-extrabold text-sm uppercase tracking-wider">
+                          <HeartPulse className="w-4 h-4" />
+                          <span>4. Panduan Pemulihan & Nutrisi Atlet</span>
+                        </div>
+                        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                          {pembahasanAI.panduanPemulihan}
+                        </p>
+                      </div>
+
+                      {/* Motivasi */}
+                      <div className="p-4 sm:p-5 bg-gradient-to-br from-cyan-950/60 to-slate-800/90 rounded-2xl border border-cyan-500/40 space-y-2 flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center gap-2 text-yellow-300 font-extrabold text-sm uppercase tracking-wider">
+                            <Flame className="w-4 h-4 text-amber-400" />
+                            <span>5. Pesan Motivasi & Edukasi untuk Atlet</span>
+                          </div>
+                          <p className="text-xs sm:text-sm text-cyan-100 italic leading-relaxed mt-2">
+                            "{pembahasanAI.pesanMotivasi}"
+                          </p>
+                        </div>
+                        <div className="pt-2 text-[11px] text-slate-400 flex items-center justify-between border-t border-slate-700/50 mt-2">
+                          <span>Kunci Sukses: Konsistensi & Evaluasi Waktu</span>
+                          <span className="text-cyan-400 font-semibold font-mono">Target: {recommendation.targetWaktu}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="py-8 text-center text-xs text-slate-400">
+                    <p>Klik tombol di bawah untuk membuat pembahasan mendalam dengan AI.</p>
+                    <button
+                      onClick={handleRefreshAI}
+                      className="mt-3 px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs"
+                    >
+                      Muat Pembahasan AI
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -521,7 +776,7 @@ export const ProgramLatihanView: React.FC<ProgramLatihanViewProps> = ({
                 ) : (
                   <tr>
                     <td colSpan={9} className="py-12 text-center text-slate-500">
-                      Belum ada program latihan yang disimpan. Buat rekomendasi program di tab "Generator Rekomendasi".
+                      Belum ada program latihan yang disimpan. Buat rekomendasi program di tab "Generator & AI".
                     </td>
                   </tr>
                 )}
@@ -533,3 +788,22 @@ export const ProgramLatihanView: React.FC<ProgramLatihanViewProps> = ({
     </div>
   );
 };
+
+function TargetIcon(props: any) {
+  return (
+    <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" strokeWidth="2" />
+      <circle cx="12" cy="12" r="6" strokeWidth="2" />
+      <circle cx="12" cy="12" r="2" strokeWidth="2" />
+    </svg>
+  );
+}
+
+function EyeIcon(props: any) {
+  return (
+    <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeWidth="2" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" strokeWidth="2" />
+    </svg>
+  );
+}
