@@ -38,6 +38,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'pb', label: 'Analisis & PB', icon: TrendingUp },
     { id: 'program', label: 'Program Latihan', icon: ClipboardList },
     { id: 'riwayat', label: 'Riwayat Waktu', icon: History },
+    { id: 'spreadsheet', label: 'Rekapan Spreadsheet', icon: FileSpreadsheet },
   ];
 
   const handleNavClick = (id: string) => {

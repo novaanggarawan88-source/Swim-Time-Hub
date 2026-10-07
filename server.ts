@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
 
@@ -12,7 +13,423 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+
+// Persistent Central Data Store for Multi-Device Synchronization
+const DATA_STORE_PATH = path.resolve(__dirname, 'data_store.json');
+
+const DEFAULT_STORE = {
+  lastUpdated: new Date().toISOString(),
+  config: {
+    webAppUrl: '',
+    spreadsheetId: '',
+    autoSync: true,
+    lastSync: ''
+  },
+  atlet: [
+    {
+      id: 'ATL-001',
+      nama: 'I Putu Arya Satria',
+      jenisKelamin: 'Laki-laki',
+      tanggalLahir: '2010-04-15',
+      kelompokUmur: 'KU II (13-14 th)',
+      klub: 'Garuda SC Buleleng',
+      pelatih: 'Coach Wayan Sudira',
+      status: 'Aktif'
+    },
+    {
+      id: 'ATL-002',
+      nama: 'Ni Kadek Ayu Lestari',
+      jenisKelamin: 'Perempuan',
+      tanggalLahir: '2012-08-22',
+      kelompokUmur: 'KU III (11-12 th)',
+      klub: 'Garuda SC Buleleng',
+      pelatih: 'Coach Wayan Sudira',
+      status: 'Aktif'
+    },
+    {
+      id: 'ATL-003',
+      nama: 'Andi Pratama',
+      jenisKelamin: 'Laki-laki',
+      tanggalLahir: '2008-11-03',
+      kelompokUmur: 'KU I (15-17 th)',
+      klub: 'Garuda SC Buleleng',
+      pelatih: 'Coach Made Arimbawa',
+      status: 'Aktif'
+    },
+    {
+      id: 'ATL-004',
+      nama: 'Siti Rahmawati',
+      jenisKelamin: 'Perempuan',
+      tanggalLahir: '2011-02-19',
+      kelompokUmur: 'KU III (11-12 th)',
+      klub: 'Garuda SC Buleleng',
+      pelatih: 'Coach Made Arimbawa',
+      status: 'Aktif'
+    },
+    {
+      id: 'ATL-005',
+      nama: 'Komang Bagus Raditya',
+      jenisKelamin: 'Laki-laki',
+      tanggalLahir: '2014-06-10',
+      kelompokUmur: 'KU IV (≤10 th)',
+      klub: 'Garuda SC Buleleng',
+      pelatih: 'Coach Wayan Sudira',
+      status: 'Aktif'
+    }
+  ],
+  lomba: [
+    {
+      id: 'LMB-001',
+      namaLomba: 'MOLA MOLA CUP II 2026',
+      penyelenggara: 'Pengkab Akuatik Buleleng & Bali Swimming',
+      lokasi: 'Kolam Renang Nirmala Asri Buleleng',
+      tanggal: '2026-03-14',
+      keterangan: 'Kejuaraan Renang Antar Perkumpulan se-Bali & Nasional'
+    },
+    {
+      id: 'LMB-002',
+      namaLomba: 'KEJURDA RENANG BALI 2026',
+      penyelenggara: 'Akuatik Indonesia Pengprov Bali',
+      lokasi: 'Kolam Renang Tirta Arum Blahkiuh',
+      tanggal: '2026-06-20',
+      keterangan: 'Seleksi Atlet Porprov & Kejurnas'
+    },
+    {
+      id: 'LMB-003',
+      namaLomba: 'PIALA BUPATI BULELENG OPEN',
+      penyelenggara: 'KONI Buleleng',
+      lokasi: 'Kolam Renang Kolam Kolam Seririt',
+      tanggal: '2026-01-25',
+      keterangan: 'Kejuaraan terbuka kategori kelompok umur'
+    }
+  ],
+  catatanWaktu: [
+    {
+      id: 'WKT-101',
+      tanggal: '2026-01-10',
+      atlet: 'Andi Pratama',
+      jenis: 'Latihan',
+      namaLomba: '',
+      gaya: 'Bebas',
+      jarak: '50 m',
+      waktu: '00:35.20',
+      waktuDetik: 35.20,
+      catatan: 'Latihan sprint awal tahun'
+    },
+    {
+      id: 'WKT-102',
+      tanggal: '2026-01-18',
+      atlet: 'Andi Pratama',
+      jenis: 'Latihan',
+      namaLomba: '',
+      gaya: 'Bebas',
+      jarak: '50 m',
+      waktu: '00:34.80',
+      waktuDetik: 34.80,
+      catatan: 'Fokus tolakan balok start'
+    },
+    {
+      id: 'WKT-103',
+      tanggal: '2026-01-25',
+      atlet: 'Andi Pratama',
+      jenis: 'Lomba',
+      namaLomba: 'PIALA BUPATI BULELENG OPEN',
+      gaya: 'Bebas',
+      jarak: '50 m',
+      waktu: '00:34.25',
+      waktuDetik: 34.25,
+      catatan: 'Babak penyisihan'
+    },
+    {
+      id: 'WKT-104',
+      tanggal: '2026-02-10',
+      atlet: 'Andi Pratama',
+      jenis: 'Latihan',
+      namaLomba: '',
+      gaya: 'Bebas',
+      jarak: '50 m',
+      waktu: '00:34.60',
+      waktuDetik: 34.60,
+      catatan: 'Interval 6x50m'
+    },
+    {
+      id: 'WKT-105',
+      tanggal: '2026-03-14',
+      atlet: 'Andi Pratama',
+      jenis: 'Lomba',
+      namaLomba: 'MOLA MOLA CUP II 2026',
+      gaya: 'Bebas',
+      jarak: '50 m',
+      waktu: '00:33.95',
+      waktuDetik: 33.95,
+      catatan: 'Final - Tembus Personal Best!',
+      isPb: true
+    },
+    {
+      id: 'WKT-106',
+      tanggal: '2026-03-14',
+      atlet: 'Andi Pratama',
+      jenis: 'Lomba',
+      namaLomba: 'MOLA MOLA CUP II 2026',
+      gaya: 'Kupu-kupu',
+      jarak: '50 m',
+      waktu: '00:36.10',
+      waktuDetik: 36.10,
+      catatan: 'Penyisihan 50m butterfly'
+    },
+    {
+      id: 'WKT-107',
+      tanggal: '2026-03-14',
+      atlet: 'I Putu Arya Satria',
+      jenis: 'Lomba',
+      namaLomba: 'MOLA MOLA CUP II 2026',
+      gaya: 'Dada',
+      jarak: '50 m',
+      waktu: '00:38.45',
+      waktuDetik: 38.45,
+      catatan: 'Medali Perak KU II',
+      isPb: true
+    },
+    {
+      id: 'WKT-108',
+      tanggal: '2026-02-28',
+      atlet: 'I Putu Arya Satria',
+      jenis: 'Latihan',
+      namaLomba: '',
+      gaya: 'Dada',
+      jarak: '50 m',
+      waktu: '00:39.80',
+      waktuDetik: 39.80,
+      catatan: 'Simulasi race pace'
+    },
+    {
+      id: 'WKT-109',
+      tanggal: '2026-03-14',
+      atlet: 'Ni Kadek Ayu Lestari',
+      jenis: 'Lomba',
+      namaLomba: 'MOLA MOLA CUP II 2026',
+      gaya: 'Bebas',
+      jarak: '50 m',
+      waktu: '00:36.20',
+      waktuDetik: 36.20,
+      catatan: 'Personal best 50m gaya bebas putri',
+      isPb: true
+    },
+    {
+      id: 'WKT-110',
+      tanggal: '2026-03-14',
+      atlet: 'Ni Kadek Ayu Lestari',
+      jenis: 'Lomba',
+      namaLomba: 'MOLA MOLA CUP II 2026',
+      gaya: 'Punggung',
+      jarak: '50 m',
+      waktu: '00:41.50',
+      waktuDetik: 41.50,
+      catatan: 'Penyisihan 50m punggung'
+    }
+  ],
+  programLatihan: []
+};
+
+// Helper to read data store safely
+function readDataStore() {
+  try {
+    if (!fs.existsSync(DATA_STORE_PATH)) {
+      fs.writeFileSync(DATA_STORE_PATH, JSON.stringify(DEFAULT_STORE, null, 2), 'utf-8');
+      return DEFAULT_STORE;
+    }
+    const raw = fs.readFileSync(DATA_STORE_PATH, 'utf-8');
+    return JSON.parse(raw);
+  } catch (err) {
+    console.error('Error reading data store:', err);
+    return DEFAULT_STORE;
+  }
+}
+
+// Helper to write data store safely
+function writeDataStore(data: any) {
+  try {
+    data.lastUpdated = new Date().toISOString();
+    fs.writeFileSync(DATA_STORE_PATH, JSON.stringify(data, null, 2), 'utf-8');
+    return true;
+  } catch (err) {
+    console.error('Error writing data store:', err);
+    return false;
+  }
+}
+
+// Ensure store exists on startup
+readDataStore();
+
+// API Route: Get Central Data (Multi-Device Shared State)
+app.get('/api/data', (_req, res) => {
+  const store = readDataStore();
+  return res.json({ success: true, data: store });
+});
+
+// API Route: Multi-Device Sync (Merge incoming items and persist)
+app.post('/api/data/sync', (req, res) => {
+  try {
+    const incoming = req.body || {};
+    const store = readDataStore();
+
+    // 1. Merge Atlet (keyed by ID or Nama)
+    if (Array.isArray(incoming.atlet) && incoming.atlet.length > 0) {
+      const existingMap = new Map<string, any>(store.atlet.map((a: any) => [a.id, a]));
+      for (const item of incoming.atlet) {
+        if (item && item.id) {
+          const prev = existingMap.get(item.id) || {};
+          existingMap.set(item.id, Object.assign({}, prev, item));
+        }
+      }
+      store.atlet = Array.from(existingMap.values());
+    }
+
+    // 2. Merge Lomba
+    if (Array.isArray(incoming.lomba) && incoming.lomba.length > 0) {
+      const existingMap = new Map<string, any>(store.lomba.map((l: any) => [l.id, l]));
+      for (const item of incoming.lomba) {
+        if (item && item.id) {
+          const prev = existingMap.get(item.id) || {};
+          existingMap.set(item.id, Object.assign({}, prev, item));
+        }
+      }
+      store.lomba = Array.from(existingMap.values());
+    }
+
+    // 3. Merge Catatan Waktu
+    if (Array.isArray(incoming.catatanWaktu) && incoming.catatanWaktu.length > 0) {
+      const existingMap = new Map<string, any>(store.catatanWaktu.map((c: any) => [c.id, c]));
+      for (const item of incoming.catatanWaktu) {
+        if (item && item.id) {
+          const prev = existingMap.get(item.id) || {};
+          existingMap.set(item.id, Object.assign({}, prev, item));
+        }
+      }
+      store.catatanWaktu = Array.from(existingMap.values());
+    }
+
+    // 4. Merge Program Latihan
+    if (Array.isArray(incoming.programLatihan) && incoming.programLatihan.length > 0) {
+      const existingMap = new Map<string, any>((store.programLatihan || []).map((p: any) => [p.id, p]));
+      for (const item of incoming.programLatihan) {
+        if (item && item.id) {
+          const prev = existingMap.get(item.id) || {};
+          existingMap.set(item.id, Object.assign({}, prev, item));
+        }
+      }
+      store.programLatihan = Array.from(existingMap.values());
+    }
+
+    // 5. Update Config if provided
+    if (incoming.config) {
+      store.config = { ...store.config, ...incoming.config };
+    }
+
+    writeDataStore(store);
+
+    return res.json({
+      success: true,
+      message: 'Sinkronisasi server multi-device berhasil.',
+      data: store
+    });
+  } catch (error: any) {
+    console.error('Sync error:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// API Route: Push/Pull Proxy to Google Apps Script (Bypasses browser CORS & secures multi-device)
+app.post('/api/sheets/proxy-pull', async (req, res) => {
+  try {
+    const store = readDataStore();
+    const webAppUrl = req.body?.webAppUrl || store.config?.webAppUrl;
+
+    if (!webAppUrl) {
+      return res.status(400).json({ success: false, error: 'URL Google Apps Script Web App belum diatur.' });
+    }
+
+    // Pull Atlet
+    const [resA, resL, resW, resP] = await Promise.allSettled([
+      fetch(`${webAppUrl}?action=getAtlet`).then(r => r.json()),
+      fetch(`${webAppUrl}?action=getLomba`).then(r => r.json()),
+      fetch(`${webAppUrl}?action=getCatatanWaktu`).then(r => r.json()),
+      fetch(`${webAppUrl}?action=getProgramLatihan`).then(r => r.json()).catch(() => [])
+    ]);
+
+    let updated = false;
+
+    if (resA.status === 'fulfilled' && Array.isArray(resA.value)) {
+      store.atlet = resA.value;
+      updated = true;
+    }
+    if (resL.status === 'fulfilled' && Array.isArray(resL.value)) {
+      store.lomba = resL.value;
+      updated = true;
+    }
+    if (resW.status === 'fulfilled' && Array.isArray(resW.value)) {
+      store.catatanWaktu = resW.value;
+      updated = true;
+    }
+    if (resP.status === 'fulfilled' && Array.isArray(resP.value)) {
+      store.programLatihan = resP.value;
+      updated = true;
+    }
+
+    if (updated) {
+      store.config.lastSync = new Date().toISOString();
+      writeDataStore(store);
+    }
+
+    return res.json({
+      success: true,
+      message: 'Rekapan data dari Google Spreadsheet berhasil ditarik dan disinkronkan ke semua perangkat!',
+      data: store
+    });
+  } catch (err: any) {
+    console.error('Sheets Proxy Pull error:', err);
+    return res.status(500).json({ success: false, error: err.message || 'Gagal menarik data dari Google Apps Script' });
+  }
+});
+
+app.post('/api/sheets/proxy-push', async (req, res) => {
+  try {
+    const store = readDataStore();
+    const webAppUrl = req.body?.webAppUrl || store.config?.webAppUrl;
+
+    if (!webAppUrl) {
+      return res.status(400).json({ success: false, error: 'URL Google Apps Script Web App belum diatur.' });
+    }
+
+    const payload = {
+      action: 'batchSync',
+      atlet: store.atlet,
+      lomba: store.lomba,
+      catatanWaktu: store.catatanWaktu,
+      programLatihan: store.programLatihan || []
+    };
+
+    const resp = await fetch(webAppUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await resp.json().catch(() => ({}));
+    store.config.lastSync = new Date().toISOString();
+    writeDataStore(store);
+
+    return res.json({
+      success: true,
+      message: data.message || 'Semua rekapan berhasil dikirim dan tersimpan di Google Spreadsheet!',
+      data: store
+    });
+  } catch (err: any) {
+    console.error('Sheets Proxy Push error:', err);
+    return res.status(500).json({ success: false, error: err.message || 'Gagal mengirim data ke Google Apps Script' });
+  }
+});
 
 // Initialize GoogleGenAI server-side with User-Agent telemetry
 const apiKey = process.env.GEMINI_API_KEY;

@@ -321,10 +321,13 @@ export const GoogleSheetsModal: React.FC<GoogleSheetsModalProps> = ({
               </div>
 
               {/* Status info */}
-              <div className="p-4 bg-slate-900/60 rounded-xl border border-slate-800 text-xs text-slate-300 space-y-1">
-                <span className="font-bold text-emerald-400 block mb-1">Status Mode Aplikasi:</span>
+              <div className="p-4 bg-slate-900/60 rounded-xl border border-slate-800 text-xs text-slate-300 space-y-2">
+                <span className="font-bold text-emerald-400 flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-400" />
+                  Status Sinkronisasi Multi-Device & Cloud:
+                </span>
                 <p>
-                  Aplikasi ini berjalan cepat dengan penyimpanan instan di browser sehingga pelatih tetap bisa mencatat waktu secara realtime tanpa lag di pinggir kolam. Bila URL Web App diisi, data juga otomatis disinkronkan ke Google Spreadsheet Anda.
+                  Aplikasi ini kini dilengkapi <b>Penyimpanan Server Pusat</b> dan <b>Sinkronisasi Google Spreadsheet</b>. Ketika Anda mencatat waktu atau menambah atlet dari HP, datanya otomatis tersimpan ke server dan spreadsheet sehingga saat Anda membuka aplikasi di laptop, komputer, atau HP lain, seluruh rekapan datanya tetap ada dan selalu sama.
                 </p>
               </div>
             </div>

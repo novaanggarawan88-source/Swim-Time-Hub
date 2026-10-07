@@ -221,6 +221,26 @@ const SEED_CATATAN: CatatanWaktu[] = [
 ];
 
 export class SwimDataService {
+  private static subscribers: Array<() => void> = [];
+
+  // Register state change listener for cross-tab or server-sync updates
+  static subscribe(callback: () => void) {
+    this.subscribers.push(callback);
+    return () => {
+      this.subscribers = this.subscribers.filter(cb => cb !== callback);
+    };
+  }
+
+  private static notifySubscribers() {
+    this.subscribers.forEach(cb => {
+      try {
+        cb();
+      } catch (e) {
+        console.error('Subscriber error:', e);
+      }
+    });
+  }
+
   // ATLET
   static getAtlet(): Atlet[] {
     const raw = localStorage.getItem(STORAGE_KEYS.ATLET);
@@ -258,6 +278,8 @@ export class SwimDataService {
 
     localStorage.setItem(STORAGE_KEYS.ATLET, JSON.stringify(list));
     this.syncBackground('saveAtlet', nowItem);
+    this.syncWithServer();
+    this.notifySubscribers();
     return { status: 'success', id, item: nowItem };
   }
 
@@ -268,6 +290,8 @@ export class SwimDataService {
       item.status = item.status === 'Aktif' ? 'Nonaktif' : 'Aktif';
       localStorage.setItem(STORAGE_KEYS.ATLET, JSON.stringify(list));
       this.syncBackground('saveAtlet', item);
+      this.syncWithServer();
+      this.notifySubscribers();
       return item;
     }
     return null;
@@ -308,6 +332,8 @@ export class SwimDataService {
 
     localStorage.setItem(STORAGE_KEYS.LOMBA, JSON.stringify(list));
     this.syncBackground('saveLomba', nowItem);
+    this.syncWithServer();
+    this.notifySubscribers();
     return { status: 'success', id, item: nowItem };
   }
 
@@ -360,6 +386,8 @@ export class SwimDataService {
     list.unshift(nowItem);
     localStorage.setItem(STORAGE_KEYS.CATATAN_WAKTU, JSON.stringify(list));
     this.syncBackground('saveCatatanWaktu', nowItem);
+    this.syncWithServer();
+    this.notifySubscribers();
 
     return { status: 'success', id, item: nowItem, isNewPb };
   }
@@ -369,6 +397,8 @@ export class SwimDataService {
     const filtered = list.filter(r => r.id !== id);
     if (filtered.length !== list.length) {
       localStorage.setItem(STORAGE_KEYS.CATATAN_WAKTU, JSON.stringify(filtered));
+      this.syncWithServer();
+      this.notifySubscribers();
       return true;
     }
     return false;
@@ -390,6 +420,8 @@ export class SwimDataService {
     const updated = [...items, ...list];
     localStorage.setItem(STORAGE_KEYS.PROGRAM_LATIHAN, JSON.stringify(updated));
     this.syncBackground('saveProgramLatihan', items);
+    this.syncWithServer();
+    this.notifySubscribers();
     return { status: 'success', count: items.length };
   }
 
@@ -412,6 +444,76 @@ export class SwimDataService {
 
   static saveConfig(config: GoogleSheetsConfig): void {
     localStorage.setItem(STORAGE_KEYS.GAS_CONFIG, JSON.stringify(config));
+    this.syncWithServer();
+    this.notifySubscribers();
+  }
+
+  // Multi-Device Server Synchronization: Initial Load & Merge
+  static async initSync(): Promise<boolean> {
+    try {
+      const res = await fetch('/api/data');
+      if (!res.ok) return false;
+      const json = await res.json();
+      if (!json.success || !json.data) return false;
+
+      const serverData = json.data;
+      let hasChanges = false;
+
+      // Update LocalStorage from Server
+      if (Array.isArray(serverData.atlet) && serverData.atlet.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.ATLET, JSON.stringify(serverData.atlet));
+        hasChanges = true;
+      }
+      if (Array.isArray(serverData.lomba) && serverData.lomba.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.LOMBA, JSON.stringify(serverData.lomba));
+        hasChanges = true;
+      }
+      if (Array.isArray(serverData.catatanWaktu) && serverData.catatanWaktu.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.CATATAN_WAKTU, JSON.stringify(serverData.catatanWaktu));
+        hasChanges = true;
+      }
+      if (Array.isArray(serverData.programLatihan)) {
+        localStorage.setItem(STORAGE_KEYS.PROGRAM_LATIHAN, JSON.stringify(serverData.programLatihan));
+        hasChanges = true;
+      }
+      if (serverData.config && serverData.config.webAppUrl) {
+        const curConfig = this.getConfig();
+        if (!curConfig.webAppUrl) {
+          localStorage.setItem(STORAGE_KEYS.GAS_CONFIG, JSON.stringify(serverData.config));
+          hasChanges = true;
+        }
+      }
+
+      if (hasChanges) {
+        this.notifySubscribers();
+      }
+
+      return true;
+    } catch (err) {
+      console.warn('Initial server sync failed (operating offline cache):', err);
+      return false;
+    }
+  }
+
+  // Background Push to Server (so all other devices get it immediately)
+  private static async syncWithServer() {
+    try {
+      const payload = {
+        atlet: this.getAtlet(),
+        lomba: this.getLomba(),
+        catatanWaktu: this.getCatatanWaktu(),
+        programLatihan: this.getProgramLatihan(),
+        config: this.getConfig()
+      };
+
+      await fetch('/api/data/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (err) {
+      console.warn('Sync to server failed:', err);
+    }
   }
 
   // Background Sync to GAS if URL is configured
@@ -430,8 +532,28 @@ export class SwimDataService {
     }
   }
 
-  // Full Push to Google Spreadsheet
-  static async pushAllToGas(webAppUrl: string): Promise<{ success: boolean; message: string }> {
+  // Full Push to Google Spreadsheet (via server proxy or direct fetch)
+  static async pushAllToGas(webAppUrl?: string): Promise<{ success: boolean; message: string }> {
+    const url = webAppUrl || this.getConfig().webAppUrl;
+    if (!url) {
+      return { success: false, message: 'URL Google Apps Script Web App belum diisi.' };
+    }
+
+    try {
+      // 1. Try server proxy push first
+      const proxyRes = await fetch('/api/sheets/proxy-push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ webAppUrl: url })
+      });
+      const proxyJson = await proxyRes.json();
+      if (proxyJson.success) {
+        return { success: true, message: proxyJson.message || 'Semua data berhasil disinkronkan ke Google Spreadsheet!' };
+      }
+    } catch {
+      // Fallback to direct fetch
+    }
+
     try {
       const payload = {
         action: 'batchSync',
@@ -441,7 +563,7 @@ export class SwimDataService {
         programLatihan: this.getProgramLatihan()
       };
 
-      const res = await fetch(webAppUrl, {
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
@@ -453,29 +575,59 @@ export class SwimDataService {
     }
   }
 
-  // Full Pull from Google Spreadsheet
-  static async pullAllFromGas(webAppUrl: string): Promise<{ success: boolean; message: string }> {
+  // Full Pull from Google Spreadsheet (via server proxy or direct fetch)
+  static async pullAllFromGas(webAppUrl?: string): Promise<{ success: boolean; message: string }> {
+    const url = webAppUrl || this.getConfig().webAppUrl;
+    if (!url) {
+      return { success: false, message: 'URL Google Apps Script Web App belum diisi.' };
+    }
+
     try {
-      // 1. Ambil Atlet
-      const resA = await fetch(`${webAppUrl}?action=getAtlet`);
+      // 1. Try server proxy pull first
+      const proxyRes = await fetch('/api/sheets/proxy-pull', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ webAppUrl: url })
+      });
+      const proxyJson = await proxyRes.json();
+      if (proxyJson.success && proxyJson.data) {
+        const d = proxyJson.data;
+        if (Array.isArray(d.atlet)) localStorage.setItem(STORAGE_KEYS.ATLET, JSON.stringify(d.atlet));
+        if (Array.isArray(d.lomba)) localStorage.setItem(STORAGE_KEYS.LOMBA, JSON.stringify(d.lomba));
+        if (Array.isArray(d.catatanWaktu)) localStorage.setItem(STORAGE_KEYS.CATATAN_WAKTU, JSON.stringify(d.catatanWaktu));
+        if (Array.isArray(d.programLatihan)) localStorage.setItem(STORAGE_KEYS.PROGRAM_LATIHAN, JSON.stringify(d.programLatihan));
+        this.notifySubscribers();
+        return { success: true, message: proxyJson.message || 'Data terbaru berhasil dimuat dari Google Spreadsheet!' };
+      }
+    } catch {
+      // Fallback to direct client fetch
+    }
+
+    try {
+      // Ambil Atlet
+      const resA = await fetch(`${url}?action=getAtlet`);
       const dataA = await resA.json();
       if (Array.isArray(dataA)) {
         localStorage.setItem(STORAGE_KEYS.ATLET, JSON.stringify(dataA));
       }
 
-      // 2. Ambil Lomba
-      const resL = await fetch(`${webAppUrl}?action=getLomba`);
+      // Ambil Lomba
+      const resL = await fetch(`${url}?action=getLomba`);
       const dataL = await resL.json();
       if (Array.isArray(dataL)) {
         localStorage.setItem(STORAGE_KEYS.LOMBA, JSON.stringify(dataL));
       }
 
-      // 3. Ambil Catatan Waktu
-      const resW = await fetch(`${webAppUrl}?action=getCatatanWaktu`);
+      // Ambil Catatan Waktu
+      const resW = await fetch(`${url}?action=getCatatanWaktu`);
       const dataW = await resW.json();
       if (Array.isArray(dataW)) {
         localStorage.setItem(STORAGE_KEYS.CATATAN_WAKTU, JSON.stringify(dataW));
       }
+
+      // Sync freshly pulled items back to central server
+      this.syncWithServer();
+      this.notifySubscribers();
 
       return { success: true, message: 'Data terbaru berhasil dimuat dari Google Spreadsheet!' };
     } catch (e: any) {
@@ -489,5 +641,7 @@ export class SwimDataService {
     localStorage.setItem(STORAGE_KEYS.LOMBA, JSON.stringify(SEED_LOMBA));
     localStorage.setItem(STORAGE_KEYS.CATATAN_WAKTU, JSON.stringify(SEED_CATATAN));
     localStorage.removeItem(STORAGE_KEYS.PROGRAM_LATIHAN);
+    this.syncWithServer();
+    this.notifySubscribers();
   }
 }

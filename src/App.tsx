@@ -14,6 +14,7 @@ import { CatatWaktuView } from './components/CatatWaktuView';
 import { AnalisisDanPBView } from './components/AnalisisDanPBView';
 import { ProgramLatihanView } from './components/ProgramLatihanView';
 import { RiwayatWaktuView } from './components/RiwayatWaktuView';
+import { RekapanSpreadsheetView } from './components/RekapanSpreadsheetView';
 import { ProfilAtletModal } from './components/ProfilAtletModal';
 import { PoolsideStopwatchModal } from './components/PoolsideStopwatchModal';
 import { GoogleSheetsModal } from './components/GoogleSheetsModal';
@@ -55,6 +56,17 @@ export default function App() {
 
   useEffect(() => {
     refreshData();
+    // Fetch central multi-device server data
+    SwimDataService.initSync().then(() => {
+      refreshData();
+    });
+
+    // Subscribe to cross-tab or server-sync data changes
+    const unsubscribe = SwimDataService.subscribe(() => {
+      refreshData();
+    });
+
+    return () => unsubscribe();
   }, []);
 
   // Data Actions
@@ -174,6 +186,17 @@ export default function App() {
             onNavigate={setCurrentTab}
           />
         )}
+
+        {currentTab === 'spreadsheet' && (
+          <RekapanSpreadsheetView
+            athletes={athletes}
+            competitions={competitions}
+            records={records}
+            programs={programs}
+            onOpenSettings={() => setIsSheetsOpen(true)}
+            onRefreshData={refreshData}
+          />
+        )}
       </main>
 
       {/* Mobile Bottom Tab Bar (Designed specifically for coach poolside single-hand tapping) */}
@@ -217,6 +240,16 @@ export default function App() {
         >
           <ClipboardList className="w-5 h-5 mb-0.5" />
           <span>Program</span>
+        </button>
+
+        <button
+          onClick={() => setCurrentTab('spreadsheet')}
+          className={`flex flex-col items-center p-1.5 rounded-lg text-[10px] font-bold ${
+            currentTab === 'spreadsheet' ? 'text-emerald-400' : 'text-slate-400'
+          }`}
+        >
+          <FileSpreadsheet className="w-5 h-5 mb-0.5 text-emerald-400" />
+          <span>Sheet</span>
         </button>
 
         <button
