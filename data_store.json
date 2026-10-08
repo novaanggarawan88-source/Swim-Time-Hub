@@ -1,55 +1,15 @@
 {
-  "lastUpdated": "2026-10-07T23:34:28.759Z",
+  "lastUpdated": "2026-10-08T01:07:22.859Z",
   "config": {
     "webAppUrl": "https://script.google.com/macros/s/AKfycbysRKWrUAYAzjnj3kc7OXHdfVaHioXO1G_aZ8Aan-mVuduGo_S4hiNDG0hFT_hVhZTSAg/exec",
     "spreadsheetId": "1LzIYYbpT5wEuCwW1nmaC1ZZyuPeQBjUowEorTS6W0jc",
     "autoSync": true,
-    "lastSync": "2026-10-07T23:34:24.611Z"
+    "lastSync": "2026-10-08T01:07:20.695Z"
   },
   "atlet": [
     {
-      "id": "ATL-003",
-      "nama": "Andi Pratama",
-      "jenisKelamin": "Laki-laki",
-      "tanggalLahir": "2008-11-03",
-      "kelompokUmur": "KU I (15-17 th)",
-      "klub": "Garuda SC Buleleng",
-      "pelatih": "Coach Made Arimbawa",
-      "status": "Nonaktif"
-    },
-    {
-      "id": "ATL-002",
-      "nama": "Ni Kadek Ayu Lestari",
-      "jenisKelamin": "Perempuan",
-      "tanggalLahir": "2012-08-22",
-      "kelompokUmur": "KU III (11-12 th)",
-      "klub": "Garuda SC Buleleng",
-      "pelatih": "Coach Wayan Sudira",
-      "status": "Nonaktif"
-    },
-    {
-      "id": "ATL-005",
-      "nama": "Komang Bagus Raditya",
-      "jenisKelamin": "Laki-laki",
-      "tanggalLahir": "2014-06-10",
-      "kelompokUmur": "KU IV (≤10 th)",
-      "klub": "Garuda SC Buleleng",
-      "pelatih": "Coach Wayan Sudira",
-      "status": "Nonaktif"
-    },
-    {
-      "id": "ATL-004",
-      "nama": "Siti Rahmawati",
-      "jenisKelamin": "Perempuan",
-      "tanggalLahir": "2011-02-19",
-      "kelompokUmur": "KU III (11-12 th)",
-      "klub": "Garuda SC Buleleng",
-      "pelatih": "Coach Made Arimbawa",
-      "status": "Nonaktif"
-    },
-    {
       "id": "ATL-001",
-      "nama": "I Putu Arya Diva Erlanga",
+      "nama": "I Putu Arya Diva Erlangga",
       "jenisKelamin": "Laki-laki",
       "tanggalLahir": "2015-12-30",
       "kelompokUmur": "KU IV (≤10 th - 10 th)",
@@ -93,14 +53,170 @@
     },
     {
       "id": "LMB-003",
-      "namaLomba": "PIALA BUPATI BULELENG OPEN",
-      "penyelenggara": "KONI Buleleng",
-      "lokasi": "Kolam Renang Nirmala Asri Buleleng",
-      "tanggal": "2026-12-18",
+      "namaLomba": "KEJUARAAN BUPATI BADUNG CUP XI 2026",
+      "penyelenggara": "KONI Badung",
+      "lokasi": "Kolam Renang Blahkiuh",
+      "tanggal": "2026-08-07",
       "keterangan": "Kejuaraan terbuka kategori kelompok umur"
     }
   ],
   "catatanWaktu": [
+    {
+      "id": "WKT-TEST-AUTO-1",
+      "tanggal": "2026-10-07",
+      "atlet": "I Putu Arya Diva Erlanga",
+      "jenis": "Latihan",
+      "namaLomba": "",
+      "gaya": "Bebas",
+      "jarak": "50 m",
+      "waktu": "00:37.00",
+      "waktuDetik": 37,
+      "catatan": "Uji coba otomatis real-time"
+    },
+    {
+      "id": "WKT-TEST-99",
+      "tanggal": "2026-10-07",
+      "atlet": "I Putu Arya Diva Erlanga",
+      "jenis": "Latihan",
+      "namaLomba": "",
+      "gaya": "Bebas",
+      "jarak": "50 m",
+      "waktu": "00:36.50",
+      "waktuDetik": 36.5,
+      "catatan": "Uji coba otomatis"
+    },
+    {
+      "id": "WKT-013430",
+      "tanggal": "2026-05-09",
+      "atlet": "I Putu Arya Diva Erlanga",
+      "jenis": "Lomba",
+      "namaLomba": "MOLA MOLA CUP II 2026",
+      "gaya": "Dada",
+      "jarak": "50 m",
+      "waktu": "00:56.60",
+      "waktuDetik": 56.6,
+      "catatan": ""
+    },
+    {
+      "id": "WKT-633832",
+      "tanggal": "2026-08-07",
+      "atlet": "I Putu Arya Diva Erlangga",
+      "jenis": "Lomba",
+      "namaLomba": "KEJUARAAN BUPATI BADUNG CUP XI 2026",
+      "gaya": "Dada",
+      "jarak": "50 m",
+      "waktu": "00:38.57",
+      "waktuDetik": 38.57,
+      "catatan": ""
+    },
+    {
+      "id": "WKT-602809",
+      "tanggal": "2026-08-07",
+      "atlet": "I Putu Arya Diva Erlangga",
+      "jenis": "Lomba",
+      "namaLomba": "KEJUARAAN BUPATI BADUNG CUP XI 2026",
+      "gaya": "Dada",
+      "jarak": "50 m",
+      "waktu": "00:46.53",
+      "waktuDetik": 46.53,
+      "catatan": ""
+    },
+    {
+      "id": "WKT-565224",
+      "tanggal": "2026-08-07",
+      "atlet": "I Putu Arya Diva Erlangga",
+      "jenis": "Lomba",
+      "namaLomba": "KEJUARAAN BUPATI BADUNG CUP XI 2026",
+      "gaya": "Dada",
+      "jarak": "100 m",
+      "waktu": "01:42.48",
+      "waktuDetik": 102.48,
+      "catatan": ""
+    },
+    {
+      "id": "WKT-508504",
+      "tanggal": "2026-08-07",
+      "atlet": "I Putu Arya Diva Erlangga",
+      "jenis": "Lomba",
+      "namaLomba": "KEJUARAAN BUPATI BADUNG CUP XI 2026",
+      "gaya": "Bebas",
+      "jarak": "100 m",
+      "waktu": "01:25.67",
+      "waktuDetik": 85.67,
+      "catatan": ""
+    },
+    {
+      "id": "WKT-407759",
+      "tanggal": "2026-08-07",
+      "atlet": "I Putu Arya Diva Erlangga",
+      "jenis": "Lomba",
+      "namaLomba": "KEJUARAAN BUPATI BADUNG CUP XI 2026",
+      "gaya": "Kupu-kupu",
+      "jarak": "50 m",
+      "waktu": "00:48.79",
+      "waktuDetik": 48.79,
+      "catatan": ""
+    },
+    {
+      "id": "WKT-353631",
+      "tanggal": "2026-08-07",
+      "atlet": "I Putu Arya Diva Erlangga",
+      "jenis": "Lomba",
+      "namaLomba": "KEJUARAAN BUPATI BADUNG CUP XI 2026",
+      "gaya": "Dada",
+      "jarak": "200 m",
+      "waktu": "00:03.52",
+      "waktuDetik": 3.52,
+      "catatan": ""
+    },
+    {
+      "id": "WKT-036358",
+      "tanggal": "2026-05-09",
+      "atlet": "I Putu Arya Diva Erlangga",
+      "jenis": "Lomba",
+      "namaLomba": "FESTIVAL RENANG MAHAJAYA",
+      "gaya": "Bebas",
+      "jarak": "50 m",
+      "waktu": "00:43.57",
+      "waktuDetik": 43.57,
+      "catatan": ""
+    },
+    {
+      "id": "WKT-004598",
+      "tanggal": "2026-05-09",
+      "atlet": "I Putu Arya Diva Erlangga",
+      "jenis": "Lomba",
+      "namaLomba": "FESTIVAL RENANG MAHAJAYA",
+      "gaya": "Kupu-kupu",
+      "jarak": "50 m",
+      "waktu": "00:56.58",
+      "waktuDetik": 56.58,
+      "catatan": ""
+    },
+    {
+      "id": "WKT-953987",
+      "tanggal": "2026-05-09",
+      "atlet": "I Putu Arya Diva Erlangga",
+      "jenis": "Lomba",
+      "namaLomba": "FESTIVAL RENANG MAHAJAYA",
+      "gaya": "Punggung",
+      "jarak": "50 m",
+      "waktu": "00:58.40",
+      "waktuDetik": 58.4,
+      "catatan": ""
+    },
+    {
+      "id": "WKT-089609",
+      "tanggal": "2026-05-09",
+      "atlet": "I Putu Arya Diva Erlanga",
+      "jenis": "Lomba",
+      "namaLomba": "FESTIVAL RENANG MAHAJAYA",
+      "gaya": "Dada",
+      "jarak": "50 m",
+      "waktu": "00:56.60",
+      "waktuDetik": 56.6,
+      "catatan": ""
+    },
     {
       "id": "WKT-441076",
       "tanggal": "2026-10-07",

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   FileSpreadsheet, 
   RefreshCw, 
@@ -18,7 +18,12 @@ import {
   Filter,
   Flame,
   Smartphone,
-  Laptop
+  Laptop,
+  ArrowUpDown,
+  ArrowUp,
+  Layers,
+  Sparkles,
+  Award
 } from 'lucide-react';
 import { Atlet, Lomba, CatatanWaktu, ProgramLatihanItem, GoogleSheetsConfig } from '../types/swim';
 import { SwimDataService } from '../services/dataService';
@@ -46,8 +51,17 @@ export const RekapanSpreadsheetView: React.FC<RekapanSpreadsheetViewProps> = ({
   const [activeSheet, setActiveSheet] = useState<'CATATAN_WAKTU' | 'ATLET' | 'LOMBA' | 'PROGRAM_LATIHAN'>('CATATAN_WAKTU');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterGaya, setFilterGaya] = useState('Semua');
+  const [filterJarak, setFilterJarak] = useState('Semua');
+  const [sortOrder, setSortOrder] = useState<'waktu_asc' | 'waktu_desc' | 'tanggal_desc'>('waktu_asc');
   const [isSyncing, setIsSyncing] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
+
+  // Auto-fill on mount: pastikan data langsung terisi otomatis dari server & spreadsheet secara realtime
+  useEffect(() => {
+    SwimDataService.initSync().then(() => {
+      onRefreshData();
+    });
+  }, []);
 
   const config: GoogleSheetsConfig = propConfig || SwimDataService.getConfig();
   const isConnected = Boolean(config.webAppUrl);
@@ -138,18 +152,18 @@ export const RekapanSpreadsheetView: React.FC<RekapanSpreadsheetViewProps> = ({
     let filename = `rekapan_${activeSheet.toLowerCase()}_${new Date().toISOString().slice(0, 10)}.csv`;
 
     if (activeSheet === 'CATATAN_WAKTU') {
-      const headers = ['No', 'ID', 'Tanggal', 'Nama Atlet', 'Jenis', 'Nama Lomba', 'Gaya', 'Jarak', 'Waktu', 'Waktu Detik', 'Personal Best', 'Catatan'];
-      const rows = records.map((r, i) => [
+      const headers = ['Peringkat', 'ID', 'Gaya', 'Jarak', 'Waktu', 'Waktu Detik', 'Nama Atlet', 'Tanggal', 'Jenis', 'Nama Lomba', 'Personal Best', 'Catatan'];
+      const rows = sortedRecords.map((r, i) => [
         i + 1,
         `"${r.id}"`,
-        `"${r.tanggal}"`,
-        `"${r.atlet}"`,
-        `"${r.jenis}"`,
-        `"${r.namaLomba || '-'}"`,
         `"${r.gaya}"`,
         `"${r.jarak}"`,
         `"${r.waktu}"`,
         r.waktuDetik,
+        `"${r.atlet}"`,
+        `"${r.tanggal}"`,
+        `"${r.jenis}"`,
+        `"${r.namaLomba || '-'}"`,
         r.isPb ? 'Ya (PB)' : 'Bukan',
         `"${(r.catatan || '').replace(/"/g, '""')}"`
       ]);
@@ -209,14 +223,49 @@ export const RekapanSpreadsheetView: React.FC<RekapanSpreadsheetViewProps> = ({
     document.body.removeChild(link);
   };
 
-  // Filter Records
+  // Hitung jumlah catatan untuk masing-masing gaya
+  const countByGaya = useMemo(() => {
+    const counts: Record<string, number> = {
+      'Semua': records.length,
+      'Bebas': 0,
+      'Dada': 0,
+      'Punggung': 0,
+      'Kupu-kupu': 0,
+      'Gaya Ganti': 0
+    };
+    records.forEach(r => {
+      if (counts[r.gaya] !== undefined) {
+        counts[r.gaya]++;
+      } else {
+        counts[r.gaya] = (counts[r.gaya] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [records]);
+
+  // Filter Records berdasarkan pencarian, gaya yang dipilih, dan jarak
   const filteredRecords = records.filter(r => {
     const matchSearch = r.atlet.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (r.namaLomba && r.namaLomba.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (r.catatan && r.catatan.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchGaya = filterGaya === 'Semua' || r.gaya === filterGaya;
-    return matchSearch && matchGaya;
+    const matchJarak = filterJarak === 'Semua' || r.jarak === filterJarak;
+    return matchSearch && matchGaya && matchJarak;
   });
+
+  // Urutkan waktu terkecil paling atas sampai terbesar ke bawah secara otomatis (Tercepat di paling atas)
+  const sortedRecords = useMemo(() => {
+    return [...filteredRecords].sort((a, b) => {
+      if (sortOrder === 'waktu_asc') {
+        return a.waktuDetik - b.waktuDetik;
+      } else if (sortOrder === 'waktu_desc') {
+        return b.waktuDetik - a.waktuDetik;
+      } else if (sortOrder === 'tanggal_desc') {
+        return new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime();
+      }
+      return a.waktuDetik - b.waktuDetik;
+    });
+  }, [filteredRecords, sortOrder]);
 
   const filteredAthletes = athletes.filter(a => 
     a.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -582,6 +631,100 @@ export const RekapanSpreadsheetView: React.FC<RekapanSpreadsheetViewProps> = ({
           </button>
         </div>
 
+        {/* Selector Gaya Renang yang Dipilih & Kontrol Urutan */}
+        {activeSheet === 'CATATAN_WAKTU' && (
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-slate-900/95 via-slate-900 to-slate-800/90 border border-cyan-500/30 space-y-3.5 shadow-lg">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <span className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                  <Layers className="w-4 h-4 text-cyan-400" />
+                  Gaya yang Dipilih:
+                </span>
+                <span className="px-3 py-1 rounded-xl text-xs font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-sm flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                  {filterGaya === 'Semua' ? 'Semua Gaya Renang' : `Gaya ${filterGaya}`}
+                  <span className="text-[11px] font-mono opacity-80">({sortedRecords.length} waktu)</span>
+                </span>
+              </div>
+
+              {/* Urutan Waktu Indikator */}
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-slate-400 font-medium">Urutan Waktu:</span>
+                <div className="flex items-center gap-1 px-3 py-1 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 font-bold text-xs shadow-sm">
+                  <ArrowUp className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                  <span>Waktu Terkecil Paling Atas (Tercepat ➔ Terbesar)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Gaya Selection Pills / Buttons */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+              {[
+                { id: 'Semua', label: 'Semua Gaya', color: 'from-slate-700 to-slate-800' },
+                { id: 'Dada', label: 'Gaya Dada', color: 'from-emerald-600 to-teal-700' },
+                { id: 'Bebas', label: 'Gaya Bebas', color: 'from-cyan-600 to-blue-700' },
+                { id: 'Punggung', label: 'Gaya Punggung', color: 'from-indigo-600 to-violet-700' },
+                { id: 'Kupu-kupu', label: 'Gaya Kupu-kupu', color: 'from-purple-600 to-pink-700' },
+                { id: 'Gaya Ganti', label: 'Gaya Ganti (IM)', color: 'from-amber-600 to-orange-700' },
+              ].map(g => {
+                const isSelected = filterGaya === g.id;
+                const count = countByGaya[g.id] || 0;
+                return (
+                  <button
+                    key={g.id}
+                    onClick={() => setFilterGaya(g.id)}
+                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap active:scale-95 ${
+                      isSelected
+                        ? `bg-gradient-to-r ${g.color} text-white shadow-lg ring-2 ring-cyan-400/70 scale-[1.02]`
+                        : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-750 border border-slate-700'
+                    }`}
+                  >
+                    <span>{g.label}</span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                      isSelected ? 'bg-black/40 text-white font-bold' : 'bg-slate-700 text-slate-300'
+                    }`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Secondary Filter: Jarak & Opsi Urutan */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800 text-xs">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-slate-400 font-semibold text-[11px]">Filter Jarak:</span>
+                {['Semua', '50 m', '100 m', '200 m', '400 m'].map(j => (
+                  <button
+                    key={j}
+                    onClick={() => setFilterJarak(j)}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${
+                      filterJarak === j
+                        ? 'bg-cyan-500 text-slate-950 font-bold shadow'
+                        : 'bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700/60'
+                    }`}
+                  >
+                    {j === 'Semua' ? 'Semua Jarak' : j}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-slate-400 font-semibold text-[11px]">Mode Urut:</span>
+                <select
+                  value={sortOrder}
+                  onChange={e => setSortOrder(e.target.value as any)}
+                  className="bg-slate-950 border border-slate-700 text-slate-200 text-[11px] rounded-lg px-2.5 py-1 focus:border-cyan-400 focus:outline-none"
+                >
+                  <option value="waktu_asc">Waktu Terkecil (Tercepat ➔ Terbesar)</option>
+                  <option value="waktu_desc">Waktu Terbesar (Terlambat ➔ Tercepat)</option>
+                  <option value="tanggal_desc">Tanggal Terbaru</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Filter & Search Bar */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           <div className="relative flex-1">
@@ -590,94 +733,140 @@ export const RekapanSpreadsheetView: React.FC<RekapanSpreadsheetViewProps> = ({
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder={`Cari data pada Sheet ${activeSheet}...`}
+              placeholder={`Cari nama atlet, lomba, atau catatan pada Sheet ${activeSheet}...`}
               className="w-full bg-slate-900 border border-slate-700 text-slate-100 rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm focus:border-cyan-400 focus:outline-none"
             />
           </div>
-
-          {activeSheet === 'CATATAN_WAKTU' && (
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-slate-400 shrink-0" />
-              <select
-                value={filterGaya}
-                onChange={e => setFilterGaya(e.target.value)}
-                className="bg-slate-900 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl px-3 py-2.5 focus:border-cyan-400 focus:outline-none"
-              >
-                <option value="Semua">Semua Gaya Renang</option>
-                <option value="Bebas">Gaya Bebas</option>
-                <option value="Dada">Gaya Dada</option>
-                <option value="Punggung">Gaya Punggung</option>
-                <option value="Kupu-kupu">Gaya Kupu-kupu</option>
-                <option value="Gaya Ganti">Gaya Ganti (IM)</option>
-              </select>
-            </div>
-          )}
         </div>
 
         {/* TABLE CONTENT BASED ON ACTIVE SHEET */}
         {activeSheet === 'CATATAN_WAKTU' && (
-          <div className="overflow-x-auto rounded-2xl border border-slate-700/80">
+          <div className="overflow-x-auto rounded-2xl border border-slate-700/80 shadow-inner">
             <table className="w-full text-left text-xs sm:text-sm border-collapse">
               <thead>
                 <tr className="bg-slate-900 text-cyan-300 font-bold uppercase tracking-wider text-[11px] border-b border-slate-700">
-                  <th className="py-3 px-3.5 w-12 text-center">No</th>
-                  <th className="py-3 px-3.5">Tanggal</th>
+                  <th className="py-3 px-3 w-16 text-center">Peringkat</th>
+                  <th className="py-3 px-3.5">Gaya & Jarak</th>
+                  <th className="py-3 px-3.5">Waktu (Terkecil ➔ Terbesar)</th>
                   <th className="py-3 px-3.5">Nama Atlet</th>
+                  <th className="py-3 px-3.5">Tanggal</th>
                   <th className="py-3 px-3.5">Jenis</th>
-                  <th className="py-3 px-3.5">Nomor (Gaya & Jarak)</th>
-                  <th className="py-3 px-3.5">Waktu</th>
                   <th className="py-3 px-3.5 text-center">Rekor PB</th>
                   <th className="py-3 px-3.5">Keterangan / Lomba</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-700/60">
-                {filteredRecords.length === 0 ? (
+                {sortedRecords.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="py-8 text-center text-slate-400">
-                      Tidak ada catatan waktu yang cocok dengan pencarian.
+                      Tidak ada catatan waktu yang cocok dengan gaya atau pencarian yang dipilih.
                     </td>
                   </tr>
                 ) : (
-                  filteredRecords.map((r, i) => (
-                    <tr key={r.id} className="hover:bg-slate-750/50 transition-colors">
-                      <td className="py-3 px-3.5 text-center text-slate-400 font-mono text-xs">{i + 1}</td>
-                      <td className="py-3 px-3.5 whitespace-nowrap text-slate-300 font-mono text-xs">{r.tanggal}</td>
-                      <td className="py-3 px-3.5 font-bold text-white whitespace-nowrap">{r.atlet}</td>
-                      <td className="py-3 px-3.5 whitespace-nowrap">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          r.jenis === 'Lomba' 
-                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' 
-                            : 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
-                        }`}>
-                          {r.jenis}
-                        </span>
-                      </td>
-                      <td className="py-3 px-3.5 whitespace-nowrap text-cyan-300 font-semibold">
-                        Gaya {r.gaya} {r.jarak}
-                      </td>
-                      <td className="py-3 px-3.5 whitespace-nowrap font-mono font-black text-amber-300 text-sm">
-                        {r.waktu}
-                        <span className="text-[10px] font-normal text-slate-400 ml-1">({r.waktuDetik}s)</span>
-                      </td>
-                      <td className="py-3 px-3.5 text-center whitespace-nowrap">
-                        {r.isPb ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/50 text-[10px] font-bold">
-                            <Flame className="w-3 h-3 text-amber-400" />
-                            PB Baru
+                  sortedRecords.map((r, i) => {
+                    const fastestTime = sortedRecords[0]?.waktuDetik || 0;
+                    const diffTime = r.waktuDetik - fastestTime;
+                    return (
+                      <tr key={r.id} className="hover:bg-slate-750/50 transition-colors">
+                        {/* Peringkat Waktu */}
+                        <td className="py-3 px-3 text-center whitespace-nowrap">
+                          {i === 0 ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-500/25 border border-amber-500/50 text-amber-300 font-black text-xs shadow-sm">
+                              🥇 1
+                            </span>
+                          ) : i === 1 ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-300/20 border border-slate-300/40 text-slate-200 font-black text-xs shadow-sm">
+                              🥈 2
+                            </span>
+                          ) : i === 2 ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-700/20 border border-amber-600/40 text-amber-400 font-black text-xs shadow-sm">
+                              🥉 3
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 font-mono text-xs font-bold">
+                              #{i + 1}
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Nomor Gaya & Jarak */}
+                        <td className="py-3 px-3.5 whitespace-nowrap">
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold ${
+                            r.gaya === 'Dada'
+                              ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                              : r.gaya === 'Bebas'
+                              ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30'
+                              : r.gaya === 'Punggung'
+                              ? 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/30'
+                              : r.gaya === 'Kupu-kupu'
+                              ? 'bg-purple-500/15 text-purple-300 border border-purple-500/30'
+                              : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                          }`}>
+                            Gaya {r.gaya} {r.jarak}
                           </span>
-                        ) : (
-                          <span className="text-slate-500 text-xs">-</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-3.5 text-slate-300 max-w-xs truncate text-xs">
-                        {r.namaLomba ? (
-                          <span className="text-amber-300/90 font-medium">{r.namaLomba}</span>
-                        ) : (
-                          r.catatan || '-'
-                        )}
-                      </td>
-                    </tr>
-                  ))
+                        </td>
+
+                        {/* Waktu (Diurutkan dari Terkecil ke Terbesar) */}
+                        <td className="py-3 px-3.5 whitespace-nowrap">
+                          <div className="flex items-baseline gap-1.5 font-mono">
+                            <span className="font-black text-amber-300 text-sm">
+                              {r.waktu}
+                            </span>
+                            <span className="text-[11px] text-slate-400">
+                              ({r.waktuDetik}s)
+                            </span>
+                            {i > 0 && diffTime > 0 && (
+                              <span className="text-[10px] text-slate-500 ml-1">
+                                +{diffTime.toFixed(2)}s
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Nama Atlet */}
+                        <td className="py-3 px-3.5 font-bold text-white whitespace-nowrap">
+                          {r.atlet}
+                        </td>
+
+                        {/* Tanggal */}
+                        <td className="py-3 px-3.5 whitespace-nowrap text-slate-300 font-mono text-xs">
+                          {r.tanggal}
+                        </td>
+
+                        {/* Jenis: Latihan / Lomba */}
+                        <td className="py-3 px-3.5 whitespace-nowrap">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            r.jenis === 'Lomba' 
+                              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' 
+                              : 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
+                          }`}>
+                            {r.jenis}
+                          </span>
+                        </td>
+
+                        {/* Rekor Personal Best */}
+                        <td className="py-3 px-3.5 text-center whitespace-nowrap">
+                          {r.isPb ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/50 text-[10px] font-bold">
+                              <Flame className="w-3 h-3 text-amber-400" />
+                              PB Baru
+                            </span>
+                          ) : (
+                            <span className="text-slate-500 text-xs">-</span>
+                          )}
+                        </td>
+
+                        {/* Keterangan / Lomba */}
+                        <td className="py-3 px-3.5 text-slate-300 max-w-xs truncate text-xs">
+                          {r.namaLomba ? (
+                            <span className="text-amber-300/90 font-medium">{r.namaLomba}</span>
+                          ) : (
+                            r.catatan || '-'
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>

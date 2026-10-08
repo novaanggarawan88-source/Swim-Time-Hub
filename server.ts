@@ -29,52 +29,12 @@ const DEFAULT_STORE = {
   atlet: [
     {
       id: 'ATL-001',
-      nama: 'I Putu Arya Satria',
+      nama: 'I Putu Arya Diva Erlangga',
       jenisKelamin: 'Laki-laki',
-      tanggalLahir: '2010-04-15',
-      kelompokUmur: 'KU II (13-14 th)',
+      tanggalLahir: '2015-12-30',
+      kelompokUmur: 'KU IV (≤10 th - 10 th)',
       klub: 'Garuda SC Buleleng',
-      pelatih: 'Coach Wayan Sudira',
-      status: 'Aktif'
-    },
-    {
-      id: 'ATL-002',
-      nama: 'Ni Kadek Ayu Lestari',
-      jenisKelamin: 'Perempuan',
-      tanggalLahir: '2012-08-22',
-      kelompokUmur: 'KU III (11-12 th)',
-      klub: 'Garuda SC Buleleng',
-      pelatih: 'Coach Wayan Sudira',
-      status: 'Aktif'
-    },
-    {
-      id: 'ATL-003',
-      nama: 'Andi Pratama',
-      jenisKelamin: 'Laki-laki',
-      tanggalLahir: '2008-11-03',
-      kelompokUmur: 'KU I (15-17 th)',
-      klub: 'Garuda SC Buleleng',
-      pelatih: 'Coach Made Arimbawa',
-      status: 'Aktif'
-    },
-    {
-      id: 'ATL-004',
-      nama: 'Siti Rahmawati',
-      jenisKelamin: 'Perempuan',
-      tanggalLahir: '2011-02-19',
-      kelompokUmur: 'KU III (11-12 th)',
-      klub: 'Garuda SC Buleleng',
-      pelatih: 'Coach Made Arimbawa',
-      status: 'Aktif'
-    },
-    {
-      id: 'ATL-005',
-      nama: 'Komang Bagus Raditya',
-      jenisKelamin: 'Laki-laki',
-      tanggalLahir: '2014-06-10',
-      kelompokUmur: 'KU IV (≤10 th)',
-      klub: 'Garuda SC Buleleng',
-      pelatih: 'Coach Wayan Sudira',
+      pelatih: 'Coach Rahmat Jumali',
       status: 'Aktif'
     }
   ],
@@ -85,149 +45,63 @@ const DEFAULT_STORE = {
       penyelenggara: 'Pengkab Akuatik Buleleng & Bali Swimming',
       lokasi: 'Kolam Renang Nirmala Asri Buleleng',
       tanggal: '2026-03-14',
-      keterangan: 'Kejuaraan Renang Antar Perkumpulan se-Bali & Nasional'
+      keterangan: 'Kejuaraan Renang Antar Perkumpulan se-Bali'
     },
     {
       id: 'LMB-002',
-      namaLomba: 'KEJURDA RENANG BALI 2026',
+      namaLomba: 'AMREG REGIS TAHUNAN KE-4 2026',
       penyelenggara: 'Akuatik Indonesia Pengprov Bali',
-      lokasi: 'Kolam Renang Tirta Arum Blahkiuh',
-      tanggal: '2026-06-20',
-      keterangan: 'Seleksi Atlet Porprov & Kejurnas'
+      lokasi: 'Kolam Renang Amarta Regis Denpasar',
+      tanggal: '2026-10-02',
+      keterangan: 'Open Kompetisi'
+    },
+    {
+      id: 'LMB-732215',
+      namaLomba: 'FESTIVAL RENANG MAHAJAYA',
+      penyelenggara: 'MAHAJAYA',
+      lokasi: 'Kolam Renang Mahajaya, Ubung, Denpasan Utara',
+      tanggal: '2026-05-09',
+      keterangan: 'Open Kompetisi'
+    },
+    {
+      id: 'LMB-833275',
+      namaLomba: 'AMREG HOLIDAY FUN & SWIMMING COMPETITION #3',
+      penyelenggara: 'Amarta Regis',
+      lokasi: 'Kolam Amarta Regis Denpasar',
+      tanggal: '2026-07-04',
+      keterangan: ''
     },
     {
       id: 'LMB-003',
-      namaLomba: 'PIALA BUPATI BULELENG OPEN',
-      penyelenggara: 'KONI Buleleng',
-      lokasi: 'Kolam Renang Kolam Kolam Seririt',
-      tanggal: '2026-01-25',
+      namaLomba: 'KEJUARAAN BUPATI BADUNG CUP XI 2026',
+      penyelenggara: 'KONI Badung',
+      lokasi: 'Kolam Renang Blahkiuh',
+      tanggal: '2026-08-07',
       keterangan: 'Kejuaraan terbuka kategori kelompok umur'
     }
   ],
   catatanWaktu: [
-    {
-      id: 'WKT-101',
-      tanggal: '2026-01-10',
-      atlet: 'Andi Pratama',
-      jenis: 'Latihan',
-      namaLomba: '',
-      gaya: 'Bebas',
-      jarak: '50 m',
-      waktu: '00:35.20',
-      waktuDetik: 35.20,
-      catatan: 'Latihan sprint awal tahun'
-    },
-    {
-      id: 'WKT-102',
-      tanggal: '2026-01-18',
-      atlet: 'Andi Pratama',
-      jenis: 'Latihan',
-      namaLomba: '',
-      gaya: 'Bebas',
-      jarak: '50 m',
-      waktu: '00:34.80',
-      waktuDetik: 34.80,
-      catatan: 'Fokus tolakan balok start'
-    },
-    {
-      id: 'WKT-103',
-      tanggal: '2026-01-25',
-      atlet: 'Andi Pratama',
-      jenis: 'Lomba',
-      namaLomba: 'PIALA BUPATI BULELENG OPEN',
-      gaya: 'Bebas',
-      jarak: '50 m',
-      waktu: '00:34.25',
-      waktuDetik: 34.25,
-      catatan: 'Babak penyisihan'
-    },
-    {
-      id: 'WKT-104',
-      tanggal: '2026-02-10',
-      atlet: 'Andi Pratama',
-      jenis: 'Latihan',
-      namaLomba: '',
-      gaya: 'Bebas',
-      jarak: '50 m',
-      waktu: '00:34.60',
-      waktuDetik: 34.60,
-      catatan: 'Interval 6x50m'
-    },
-    {
-      id: 'WKT-105',
-      tanggal: '2026-03-14',
-      atlet: 'Andi Pratama',
-      jenis: 'Lomba',
-      namaLomba: 'MOLA MOLA CUP II 2026',
-      gaya: 'Bebas',
-      jarak: '50 m',
-      waktu: '00:33.95',
-      waktuDetik: 33.95,
-      catatan: 'Final - Tembus Personal Best!',
-      isPb: true
-    },
-    {
-      id: 'WKT-106',
-      tanggal: '2026-03-14',
-      atlet: 'Andi Pratama',
-      jenis: 'Lomba',
-      namaLomba: 'MOLA MOLA CUP II 2026',
-      gaya: 'Kupu-kupu',
-      jarak: '50 m',
-      waktu: '00:36.10',
-      waktuDetik: 36.10,
-      catatan: 'Penyisihan 50m butterfly'
-    },
-    {
-      id: 'WKT-107',
-      tanggal: '2026-03-14',
-      atlet: 'I Putu Arya Satria',
-      jenis: 'Lomba',
-      namaLomba: 'MOLA MOLA CUP II 2026',
-      gaya: 'Dada',
-      jarak: '50 m',
-      waktu: '00:38.45',
-      waktuDetik: 38.45,
-      catatan: 'Medali Perak KU II',
-      isPb: true
-    },
-    {
-      id: 'WKT-108',
-      tanggal: '2026-02-28',
-      atlet: 'I Putu Arya Satria',
-      jenis: 'Latihan',
-      namaLomba: '',
-      gaya: 'Dada',
-      jarak: '50 m',
-      waktu: '00:39.80',
-      waktuDetik: 39.80,
-      catatan: 'Simulasi race pace'
-    },
-    {
-      id: 'WKT-109',
-      tanggal: '2026-03-14',
-      atlet: 'Ni Kadek Ayu Lestari',
-      jenis: 'Lomba',
-      namaLomba: 'MOLA MOLA CUP II 2026',
-      gaya: 'Bebas',
-      jarak: '50 m',
-      waktu: '00:36.20',
-      waktuDetik: 36.20,
-      catatan: 'Personal best 50m gaya bebas putri',
-      isPb: true
-    },
-    {
-      id: 'WKT-110',
-      tanggal: '2026-03-14',
-      atlet: 'Ni Kadek Ayu Lestari',
-      jenis: 'Lomba',
-      namaLomba: 'MOLA MOLA CUP II 2026',
-      gaya: 'Punggung',
-      jarak: '50 m',
-      waktu: '00:41.50',
-      waktuDetik: 41.50,
-      catatan: 'Penyisihan 50m punggung'
-    }
+    { id: 'WKT-633832', tanggal: '2026-08-07', atlet: 'I Putu Arya Diva Erlangga', jenis: 'Lomba', namaLomba: 'KEJUARAAN BUPATI BADUNG CUP XI 2026', gaya: 'Dada', jarak: '50 m', waktu: '00:38.57', waktuDetik: 38.57, catatan: '', isPb: true },
+    { id: 'WKT-602809', tanggal: '2026-08-07', atlet: 'I Putu Arya Diva Erlangga', jenis: 'Lomba', namaLomba: 'KEJUARAAN BUPATI BADUNG CUP XI 2026', gaya: 'Dada', jarak: '50 m', waktu: '00:46.53', waktuDetik: 46.53, catatan: '' },
+    { id: 'WKT-565224', tanggal: '2026-08-07', atlet: 'I Putu Arya Diva Erlangga', jenis: 'Lomba', namaLomba: 'KEJUARAAN BUPATI BADUNG CUP XI 2026', gaya: 'Dada', jarak: '100 m', waktu: '01:42.48', waktuDetik: 102.48, catatan: '' },
+    { id: 'WKT-508504', tanggal: '2026-08-07', atlet: 'I Putu Arya Diva Erlangga', jenis: 'Lomba', namaLomba: 'KEJUARAAN BUPATI BADUNG CUP XI 2026', gaya: 'Bebas', jarak: '100 m', waktu: '01:25.67', waktuDetik: 85.67, catatan: '' },
+    { id: 'WKT-407759', tanggal: '2026-08-07', atlet: 'I Putu Arya Diva Erlangga', jenis: 'Lomba', namaLomba: 'KEJUARAAN BUPATI BADUNG CUP XI 2026', gaya: 'Kupu-kupu', jarak: '50 m', waktu: '00:48.79', waktuDetik: 48.79, catatan: '', isPb: true },
+    { id: 'WKT-353631', tanggal: '2026-08-07', atlet: 'I Putu Arya Diva Erlangga', jenis: 'Lomba', namaLomba: 'KEJUARAAN BUPATI BADUNG CUP XI 2026', gaya: 'Dada', jarak: '200 m', waktu: '00:03.52', waktuDetik: 3.52, catatan: '' },
+    { id: 'WKT-036358', tanggal: '2026-05-09', atlet: 'I Putu Arya Diva Erlangga', jenis: 'Lomba', namaLomba: 'FESTIVAL RENANG MAHAJAYA', gaya: 'Bebas', jarak: '50 m', waktu: '00:43.57', waktuDetik: 43.57, catatan: '' },
+    { id: 'WKT-004598', tanggal: '2026-05-09', atlet: 'I Putu Arya Diva Erlangga', jenis: 'Lomba', namaLomba: 'FESTIVAL RENANG MAHAJAYA', gaya: 'Kupu-kupu', jarak: '50 m', waktu: '00:56.58', waktuDetik: 56.58, catatan: '' },
+    { id: 'WKT-953987', tanggal: '2026-05-09', atlet: 'I Putu Arya Diva Erlangga', jenis: 'Lomba', namaLomba: 'FESTIVAL RENANG MAHAJAYA', gaya: 'Punggung', jarak: '50 m', waktu: '00:58.40', waktuDetik: 58.40, catatan: '', isPb: true },
+    { id: 'WKT-089609', tanggal: '2026-05-09', atlet: 'I Putu Arya Diva Erlangga', jenis: 'Lomba', namaLomba: 'FESTIVAL RENANG MAHAJAYA', gaya: 'Dada', jarak: '50 m', waktu: '00:56.60', waktuDetik: 56.60, catatan: '' },
+    { id: 'WKT-441076', tanggal: '2026-10-07', atlet: 'I Putu Arya Diva Erlangga', jenis: 'Lomba', namaLomba: 'AMREG REGIS TAHUNAN KE-4 2026', gaya: 'Bebas', jarak: '50 m', waktu: '00:37.39', waktuDetik: 37.39, catatan: '', isPb: true },
+    { id: 'WKT-419252', tanggal: '2026-10-07', atlet: 'I Putu Arya Diva Erlangga', jenis: 'Lomba', namaLomba: 'AMREG REGIS TAHUNAN KE-4 2026', gaya: 'Bebas', jarak: '200 m', waktu: '03:01.99', waktuDetik: 181.99, catatan: '', isPb: true },
+    { id: 'WKT-394515', tanggal: '2026-10-07', atlet: 'I Putu Arya Diva Erlangga', jenis: 'Lomba', namaLomba: 'AMREG REGIS TAHUNAN KE-4 2026', gaya: 'Dada', jarak: '100 m', waktu: '01:36.90', waktuDetik: 96.90, catatan: '', isPb: true },
+    { id: 'WKT-361443', tanggal: '2026-10-07', atlet: 'I Putu Arya Diva Erlangga', jenis: 'Lomba', namaLomba: 'AMREG REGIS TAHUNAN KE-4 2026', gaya: 'Bebas', jarak: '100 m', waktu: '01:23.29', waktuDetik: 83.29, catatan: '', isPb: true },
+    { id: 'WKT-330420', tanggal: '2026-10-07', atlet: 'I Putu Arya Diva Erlangga', jenis: 'Lomba', namaLomba: 'AMREG REGIS TAHUNAN KE-4 2026', gaya: 'Dada', jarak: '50 m', waktu: '00:43.33', waktuDetik: 43.33, catatan: '' },
+    { id: 'WKT-300022', tanggal: '2026-10-07', atlet: 'I Putu Arya Diva Erlangga', jenis: 'Lomba', namaLomba: 'AMREG REGIS TAHUNAN KE-4 2026', gaya: 'Dada', jarak: '200 m', waktu: '03:27.73', waktuDetik: 207.73, catatan: '', isPb: true },
+    { id: 'WKT-008888', tanggal: '2026-09-20', atlet: 'I Putu Arya Diva Erlangga', jenis: 'Lomba', namaLomba: 'MOLA MOLA CUP II 2026', gaya: 'Bebas', jarak: '100 m', waktu: '01:25.83', waktuDetik: 85.83, catatan: '' },
+    { id: 'WKT-989035', tanggal: '2026-09-20', atlet: 'I Putu Arya Diva Erlangga', jenis: 'Lomba', namaLomba: 'MOLA MOLA CUP II 2026', gaya: 'Bebas', jarak: '50 m', waktu: '00:38.01', waktuDetik: 38.01, catatan: '' },
+    { id: 'WKT-968588', tanggal: '2026-09-20', atlet: 'I Putu Arya Diva Erlangga', jenis: 'Lomba', namaLomba: 'MOLA MOLA CUP II 2026', gaya: 'Dada', jarak: '50 m', waktu: '00:44.77', waktuDetik: 44.77, catatan: '' },
+    { id: 'WKT-953500', tanggal: '2026-09-20', atlet: 'I Putu Arya Diva Erlangga', jenis: 'Lomba', namaLomba: 'MOLA MOLA CUP II 2026', gaya: 'Dada', jarak: '100 m', waktu: '01:39.92', waktuDetik: 99.92, catatan: '' },
+    { id: 'WKT-927478', tanggal: '2026-09-20', atlet: 'I Putu Arya Diva Erlangga', jenis: 'Lomba', namaLomba: 'MOLA MOLA CUP II 2026', gaya: 'Dada', jarak: '200 m', waktu: '03:31.35', waktuDetik: 211.35, catatan: '' }
   ],
   programLatihan: []
 };
@@ -291,38 +165,17 @@ async function pullFromGoogleSheetsSilent() {
     let updated = false;
 
     if (resA.status === 'fulfilled' && Array.isArray(resA.value) && resA.value.length > 0) {
-      const existingMap = new Map<string, any>(store.atlet.map((a: any) => [a.id, a]));
-      for (const item of resA.value) {
-        if (item && item.id) {
-          const prev = existingMap.get(item.id) || {};
-          existingMap.set(item.id, Object.assign({}, prev, item));
-        }
-      }
-      store.atlet = Array.from(existingMap.values());
+      store.atlet = resA.value;
       updated = true;
     }
 
     if (resL.status === 'fulfilled' && Array.isArray(resL.value) && resL.value.length > 0) {
-      const existingMap = new Map<string, any>(store.lomba.map((l: any) => [l.id, l]));
-      for (const item of resL.value) {
-        if (item && item.id) {
-          const prev = existingMap.get(item.id) || {};
-          existingMap.set(item.id, Object.assign({}, prev, item));
-        }
-      }
-      store.lomba = Array.from(existingMap.values());
+      store.lomba = resL.value;
       updated = true;
     }
 
     if (resW.status === 'fulfilled' && Array.isArray(resW.value) && resW.value.length > 0) {
-      const existingMap = new Map<string, any>(store.catatanWaktu.map((c: any) => [c.id, c]));
-      for (const item of resW.value) {
-        if (item && item.id) {
-          const prev = existingMap.get(item.id) || {};
-          existingMap.set(item.id, Object.assign({}, prev, item));
-        }
-      }
-      store.catatanWaktu = Array.from(existingMap.values());
+      store.catatanWaktu = resW.value;
       updated = true;
     }
 
@@ -335,9 +188,9 @@ async function pullFromGoogleSheetsSilent() {
   }
 }
 
-// Initial background sync from Google Sheets on server boot & periodic interval
+// Initial background sync from Google Sheets on server boot & periodic interval (every 10s)
 pullFromGoogleSheetsSilent();
-setInterval(pullFromGoogleSheetsSilent, 20000);
+setInterval(pullFromGoogleSheetsSilent, 10000);
 
 // API Route: Get Central Data (Multi-Device Shared State)
 app.get('/api/data', (_req, res) => {
@@ -362,52 +215,42 @@ app.post('/api/data/sync', (req, res) => {
       }
     }
 
-    // 1. Merge Atlet (keyed by ID or Nama)
-    if (Array.isArray(incoming.atlet) && incoming.atlet.length > 0) {
-      const existingMap = new Map<string, any>(store.atlet.map((a: any) => [a.id, a]));
-      for (const item of incoming.atlet) {
-        if (item && item.id) {
-          const prev = existingMap.get(item.id) || {};
-          existingMap.set(item.id, Object.assign({}, prev, item));
+    // Handle Granular Add/Update Actions
+    if (incoming.action && incoming.item) {
+      if (incoming.action === 'saveCatatanWaktu') {
+        const idx = store.catatanWaktu.findIndex((c: any) => c.id === incoming.item.id);
+        if (idx >= 0) {
+          store.catatanWaktu[idx] = incoming.item;
+        } else {
+          store.catatanWaktu.unshift(incoming.item);
+        }
+      } else if (incoming.action === 'saveAtlet') {
+        const idx = store.atlet.findIndex((a: any) => a.id === incoming.item.id);
+        if (idx >= 0) {
+          store.atlet[idx] = incoming.item;
+        } else {
+          store.atlet.push(incoming.item);
+        }
+      } else if (incoming.action === 'saveLomba') {
+        const idx = store.lomba.findIndex((l: any) => l.id === incoming.item.id);
+        if (idx >= 0) {
+          store.lomba[idx] = incoming.item;
+        } else {
+          store.lomba.unshift(incoming.item);
+        }
+      } else if (incoming.action === 'saveProgramLatihan') {
+        store.programLatihan = Array.isArray(incoming.item) ? [...incoming.item, ...(store.programLatihan || [])] : store.programLatihan;
+      }
+    } else {
+      // Background full sync only for genuinely new records (not old dummy seeds)
+      if (Array.isArray(incoming.catatanWaktu) && incoming.catatanWaktu.length > 0) {
+        const validNew = incoming.catatanWaktu.filter((c: any) => 
+          c && c.id && !c.id.startsWith('WKT-10') && !c.id.startsWith('WKT-110') && !store.catatanWaktu.some((sc: any) => sc.id === c.id)
+        );
+        if (validNew.length > 0) {
+          store.catatanWaktu = [...validNew, ...store.catatanWaktu];
         }
       }
-      store.atlet = Array.from(existingMap.values());
-    }
-
-    // 2. Merge Lomba
-    if (Array.isArray(incoming.lomba) && incoming.lomba.length > 0) {
-      const existingMap = new Map<string, any>(store.lomba.map((l: any) => [l.id, l]));
-      for (const item of incoming.lomba) {
-        if (item && item.id) {
-          const prev = existingMap.get(item.id) || {};
-          existingMap.set(item.id, Object.assign({}, prev, item));
-        }
-      }
-      store.lomba = Array.from(existingMap.values());
-    }
-
-    // 3. Merge Catatan Waktu
-    if (Array.isArray(incoming.catatanWaktu) && incoming.catatanWaktu.length > 0) {
-      const existingMap = new Map<string, any>(store.catatanWaktu.map((c: any) => [c.id, c]));
-      for (const item of incoming.catatanWaktu) {
-        if (item && item.id) {
-          const prev = existingMap.get(item.id) || {};
-          existingMap.set(item.id, Object.assign({}, prev, item));
-        }
-      }
-      store.catatanWaktu = Array.from(existingMap.values());
-    }
-
-    // 4. Merge Program Latihan
-    if (Array.isArray(incoming.programLatihan) && incoming.programLatihan.length > 0) {
-      const existingMap = new Map<string, any>((store.programLatihan || []).map((p: any) => [p.id, p]));
-      for (const item of incoming.programLatihan) {
-        if (item && item.id) {
-          const prev = existingMap.get(item.id) || {};
-          existingMap.set(item.id, Object.assign({}, prev, item));
-        }
-      }
-      store.programLatihan = Array.from(existingMap.values());
     }
 
     // 5. Update Config if provided (protect non-empty server values from being wiped by uninitialized clients)
