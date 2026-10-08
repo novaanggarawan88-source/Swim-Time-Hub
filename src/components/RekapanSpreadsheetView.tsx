@@ -23,7 +23,10 @@ import {
   ArrowUp,
   Layers,
   Sparkles,
-  Award
+  Award,
+  ChevronDown,
+  Ruler,
+  RotateCcw
 } from 'lucide-react';
 import { Atlet, Lomba, CatatanWaktu, ProgramLatihanItem, GoogleSheetsConfig } from '../types/swim';
 import { SwimDataService } from '../services/dataService';
@@ -241,6 +244,26 @@ export const RekapanSpreadsheetView: React.FC<RekapanSpreadsheetViewProps> = ({
       }
     });
     return counts;
+  }, [records]);
+
+  // Hitung jumlah catatan untuk masing-masing jarak
+  const countByJarak = useMemo(() => {
+    const counts: Record<string, number> = {
+      'Semua': records.length
+    };
+    records.forEach(r => {
+      const j = r.jarak || '50 m';
+      counts[j] = (counts[j] || 0) + 1;
+    });
+    return counts;
+  }, [records]);
+
+  // Daftar opsi jarak dinamis dari data
+  const availableJarakList = useMemo(() => {
+    const standard = ['50 m', '100 m', '200 m', '400 m', '800 m', '1500 m'];
+    const custom = records.map(r => r.jarak).filter(Boolean);
+    const set = new Set([...standard, ...custom]);
+    return Array.from(set).sort((a, b) => parseInt(a) - parseInt(b));
   }, [records]);
 
   // Filter Records berdasarkan pencarian, gaya yang dipilih, dan jarak
@@ -631,113 +654,176 @@ export const RekapanSpreadsheetView: React.FC<RekapanSpreadsheetViewProps> = ({
           </button>
         </div>
 
-        {/* Selector Gaya Renang yang Dipilih & Kontrol Urutan */}
+        {/* Kontrol Filter & Dropdown untuk Sheet CATATAN_WAKTU */}
         {activeSheet === 'CATATAN_WAKTU' && (
-          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-slate-900/95 via-slate-900 to-slate-800/90 border border-cyan-500/30 space-y-3.5 shadow-lg">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <span className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                  <Layers className="w-4 h-4 text-cyan-400" />
-                  Gaya yang Dipilih:
-                </span>
-                <span className="px-3 py-1 rounded-xl text-xs font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-sm flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                  {filterGaya === 'Semua' ? 'Semua Gaya Renang' : `Gaya ${filterGaya}`}
-                  <span className="text-[11px] font-mono opacity-80">({sortedRecords.length} waktu)</span>
-                </span>
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-slate-900/95 via-slate-900 to-slate-800/90 border border-cyan-500/30 space-y-4 shadow-xl">
+            {/* Row 1: Dropdowns Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              {/* Dropdown 1: Tampilkan Gaya yang Dipilih */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <Layers className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                  <span>Gaya yang Dipilih:</span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={filterGaya}
+                    onChange={e => setFilterGaya(e.target.value)}
+                    className="w-full appearance-none bg-slate-950/90 hover:bg-slate-950 border border-slate-700/80 hover:border-cyan-500/60 focus:border-cyan-400 text-slate-100 font-bold text-xs sm:text-sm rounded-xl px-3.5 py-2.5 pr-9 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400/25 shadow-inner cursor-pointer"
+                  >
+                    <option value="Semua">Semua Gaya Renang ({countByGaya['Semua'] || 0})</option>
+                    <option value="Dada">🏊 Gaya Dada ({countByGaya['Dada'] || 0})</option>
+                    <option value="Bebas">🏊 Gaya Bebas ({countByGaya['Bebas'] || 0})</option>
+                    <option value="Punggung">🏊 Gaya Punggung ({countByGaya['Punggung'] || 0})</option>
+                    <option value="Kupu-kupu">🏊 Gaya Kupu-kupu ({countByGaya['Kupu-kupu'] || 0})</option>
+                    <option value="Gaya Ganti">🏊 Gaya Ganti / IM ({countByGaya['Gaya Ganti'] || 0})</option>
+                  </select>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-cyan-400">
+                    <ChevronDown className="w-4 h-4" />
+                  </div>
+                </div>
               </div>
 
-              {/* Urutan Waktu Indikator */}
-              <div className="flex items-center gap-2 text-xs">
-                <span className="text-slate-400 font-medium">Urutan Waktu:</span>
-                <div className="flex items-center gap-1 px-3 py-1 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 font-bold text-xs shadow-sm">
-                  <ArrowUp className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-                  <span>Waktu Terkecil Paling Atas (Tercepat ➔ Terbesar)</span>
+              {/* Dropdown 2: Filter Jarak */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <Ruler className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>Filter Jarak:</span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={filterJarak}
+                    onChange={e => setFilterJarak(e.target.value)}
+                    className="w-full appearance-none bg-slate-950/90 hover:bg-slate-950 border border-slate-700/80 hover:border-emerald-500/60 focus:border-emerald-400 text-slate-100 font-bold text-xs sm:text-sm rounded-xl px-3.5 py-2.5 pr-9 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-400/25 shadow-inner cursor-pointer"
+                  >
+                    <option value="Semua">Semua Jarak ({countByJarak['Semua'] || 0})</option>
+                    {availableJarakList.map(j => (
+                      <option key={j} value={j}>
+                        {j} ({countByJarak[j] || 0} waktu)
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-emerald-400">
+                    <ChevronDown className="w-4 h-4" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Dropdown 3: Urutan Waktu */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <ArrowUpDown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span>Urutan Waktu:</span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={sortOrder}
+                    onChange={e => setSortOrder(e.target.value as any)}
+                    className="w-full appearance-none bg-slate-950/90 hover:bg-slate-950 border border-slate-700/80 hover:border-amber-500/60 focus:border-amber-400 text-slate-100 font-bold text-xs sm:text-sm rounded-xl px-3.5 py-2.5 pr-9 transition-all focus:outline-none focus:ring-2 focus:ring-amber-400/25 shadow-inner cursor-pointer"
+                  >
+                    <option value="waktu_asc">⏱ Waktu Terkecil Paling Atas (Tercepat)</option>
+                    <option value="waktu_desc">⏱ Waktu Terbesar Paling Atas (Terlambat)</option>
+                    <option value="tanggal_desc">📅 Tanggal Pelaksanaan Terbaru</option>
+                  </select>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-amber-400">
+                    <ChevronDown className="w-4 h-4" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Pencarian Kata Kunci */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span>Cari Data:</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Nama lomba/catatan..."
+                    className="w-full bg-slate-950/90 border border-slate-700/80 focus:border-cyan-400 text-slate-100 placeholder-slate-500 text-xs sm:text-sm rounded-xl pl-9 pr-3.5 py-2.5 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400/25 shadow-inner"
+                  />
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
                 </div>
               </div>
             </div>
 
-            {/* Gaya Selection Pills / Buttons */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-              {[
-                { id: 'Semua', label: 'Semua Gaya', color: 'from-slate-700 to-slate-800' },
-                { id: 'Dada', label: 'Gaya Dada', color: 'from-emerald-600 to-teal-700' },
-                { id: 'Bebas', label: 'Gaya Bebas', color: 'from-cyan-600 to-blue-700' },
-                { id: 'Punggung', label: 'Gaya Punggung', color: 'from-indigo-600 to-violet-700' },
-                { id: 'Kupu-kupu', label: 'Gaya Kupu-kupu', color: 'from-purple-600 to-pink-700' },
-                { id: 'Gaya Ganti', label: 'Gaya Ganti (IM)', color: 'from-amber-600 to-orange-700' },
-              ].map(g => {
-                const isSelected = filterGaya === g.id;
-                const count = countByGaya[g.id] || 0;
-                return (
-                  <button
-                    key={g.id}
-                    onClick={() => setFilterGaya(g.id)}
-                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap active:scale-95 ${
-                      isSelected
-                        ? `bg-gradient-to-r ${g.color} text-white shadow-lg ring-2 ring-cyan-400/70 scale-[1.02]`
-                        : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-750 border border-slate-700'
-                    }`}
-                  >
-                    <span>{g.label}</span>
-                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
-                      isSelected ? 'bg-black/40 text-white font-bold' : 'bg-slate-700 text-slate-300'
-                    }`}>
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+            {/* Row 2: Status & Visual Filter Pills Strip */}
+            <div className="flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-slate-800 text-xs">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-slate-400 font-medium">Filter Aktif:</span>
 
-            {/* Secondary Filter: Jarak & Opsi Urutan */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800 text-xs">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-slate-400 font-semibold text-[11px]">Filter Jarak:</span>
-                {['Semua', '50 m', '100 m', '200 m', '400 m'].map(j => (
-                  <button
-                    key={j}
-                    onClick={() => setFilterJarak(j)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${
-                      filterJarak === j
-                        ? 'bg-cyan-500 text-slate-950 font-bold shadow'
-                        : 'bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700/60'
-                    }`}
-                  >
-                    {j === 'Semua' ? 'Semua Jarak' : j}
-                  </button>
-                ))}
+                {/* Gaya Terpilih Badge */}
+                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold text-xs border ${
+                  filterGaya === 'Dada'
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                    : filterGaya === 'Bebas'
+                    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+                    : filterGaya === 'Punggung'
+                    ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+                    : filterGaya === 'Kupu-kupu'
+                    ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+                    : filterGaya === 'Gaya Ganti'
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                    : 'bg-slate-800 text-slate-300 border-slate-700'
+                }`}>
+                  <Sparkles className="w-3 h-3" />
+                  <span>{filterGaya === 'Semua' ? 'Semua Gaya' : `Gaya ${filterGaya}`}</span>
+                </span>
+
+                {/* Jarak Terpilih Badge */}
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold text-xs bg-slate-800 text-emerald-300 border border-slate-700">
+                  <Ruler className="w-3 h-3" />
+                  <span>{filterJarak === 'Semua' ? 'Semua Jarak' : filterJarak}</span>
+                </span>
+
+                {/* Urutan Badge */}
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold text-xs bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                  <ArrowUp className="w-3 h-3" />
+                  <span>{sortOrder === 'waktu_asc' ? 'Waktu Terkecil Paling Atas' : sortOrder === 'waktu_desc' ? 'Waktu Terbesar Paling Atas' : 'Tanggal Terbaru'}</span>
+                </span>
+
+                <span className="text-slate-400 font-mono text-[11px] ml-1">
+                  • <b>{sortedRecords.length}</b> catatan ditemukan
+                </span>
               </div>
 
-              <div className="flex items-center gap-2">
-                <span className="text-slate-400 font-semibold text-[11px]">Mode Urut:</span>
-                <select
-                  value={sortOrder}
-                  onChange={e => setSortOrder(e.target.value as any)}
-                  className="bg-slate-950 border border-slate-700 text-slate-200 text-[11px] rounded-lg px-2.5 py-1 focus:border-cyan-400 focus:outline-none"
+              {/* Reset Filter Button (if filtered) */}
+              {(filterGaya !== 'Semua' || filterJarak !== 'Semua' || searchQuery !== '' || sortOrder !== 'waktu_asc') && (
+                <button
+                  onClick={() => {
+                    setFilterGaya('Semua');
+                    setFilterJarak('Semua');
+                    setSearchQuery('');
+                    setSortOrder('waktu_asc');
+                  }}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white text-[11px] font-semibold border border-slate-700 transition-all active:scale-95"
                 >
-                  <option value="waktu_asc">Waktu Terkecil (Tercepat ➔ Terbesar)</option>
-                  <option value="waktu_desc">Waktu Terbesar (Terlambat ➔ Tercepat)</option>
-                  <option value="tanggal_desc">Tanggal Terbaru</option>
-                </select>
-              </div>
+                  <RotateCcw className="w-3 h-3 text-cyan-400" />
+                  <span>Reset Filter</span>
+                </button>
+              )}
             </div>
           </div>
         )}
 
-        {/* Filter & Search Bar */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder={`Cari nama atlet, lomba, atau catatan pada Sheet ${activeSheet}...`}
-              className="w-full bg-slate-900 border border-slate-700 text-slate-100 rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm focus:border-cyan-400 focus:outline-none"
-            />
+        {/* Filter Bar untuk Sheet Non-Catatan Waktu (ATLET, LOMBA, PROGRAM) */}
+        {activeSheet !== 'CATATAN_WAKTU' && (
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder={`Cari data pada Sheet ${activeSheet}...`}
+                className="w-full bg-slate-900 border border-slate-700 text-slate-100 rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm focus:border-cyan-400 focus:outline-none"
+              />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* TABLE CONTENT BASED ON ACTIVE SHEET */}
         {activeSheet === 'CATATAN_WAKTU' && (
